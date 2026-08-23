@@ -337,7 +337,16 @@
 
         document.getElementById('summary-date').value = getLocalDateString();
 
+        function sortLogsChronologically() {
+            logs.sort((a, b) => {
+                const dtA = new Date(`${a.date}T${a.time}`);
+                const dtB = new Date(`${b.date}T${b.time}`);
+                return dtB - dtA; // Neueste Einträge oben
+            });
+        }
+
         function saveAndRender() {
+            sortLogsChronologically();
             localStorage.setItem('trip_time_logs', JSON.stringify(logs));
             render();
         }
@@ -368,8 +377,10 @@
         }
 
         function deleteLog(id) {
-            logs = logs.filter(l => l.id !== id);
-            saveAndRender();
+            if (confirm("Möchtest du diesen Eintrag wirklich löschen?")) {
+                logs = logs.filter(l => l.id !== id);
+                saveAndRender();
+            }
         }
 
         function clearLogs() {
@@ -403,7 +414,7 @@
             const sortedLogs = [...logs].sort((a, b) => {
                 const dtA = new Date(`${a.date}T${a.time}`);
                 const dtB = new Date(`${b.date}T${b.time}`);
-                return dtA - dtB;
+                return dtA - dtB; // Chronologisch aufsteigend für Zeitberechnung
             });
 
             let totals = { Active: 0, Passive: 0, Break: 0 };
@@ -419,7 +430,8 @@
                     const diffMs = t2 - t1;
                     if (diffMs > 0) {
                         const hoursDecimal = diffMs / (1000 * 60 * 60);
-                        if (totals.hasOwnProperty(current.status)) {
+                        // Status 'End' zählt keine weiteren Stunden
+                        if (totals.hasOwnProperty(current.status) && current.status !== 'End') {
                             totals[current.status] += hoursDecimal;
                         }
                     }
