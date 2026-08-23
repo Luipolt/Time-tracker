@@ -327,7 +327,15 @@
 
         initTheme();
 
-        document.getElementById('summary-date').value = new Date().toISOString().split('T')[0];
+        // Lokales Datum im Format YYYY-MM-DD abrufen
+        function getLocalDateString(d = new Date()) {
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        document.getElementById('summary-date').value = getLocalDateString();
 
         function saveAndRender() {
             localStorage.setItem('trip_time_logs', JSON.stringify(logs));
@@ -336,7 +344,7 @@
 
         function addTimestamp(status) {
             const now = new Date();
-            const dateStr = now.toISOString().split('T')[0];
+            const dateStr = getLocalDateString(now);
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             
@@ -523,7 +531,7 @@
             const ws = XLSX.utils.aoa_to_sheet(sheetData);
             XLSX.utils.book_append_sheet(wb, ws, "Work Logs");
 
-            XLSX.writeFile(wb, `work_matrix_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(wb, `work_matrix_${getLocalDateString()}.xlsx`);
         }
 
         render();
