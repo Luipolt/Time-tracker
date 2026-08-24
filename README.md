@@ -24,4 +24,3 @@ Ein minimalistischer, datenschutzfreundlicher Arbeitszeittracker als Single-Page
 1. Repository klonen oder den Code in eine `index.html` einfügen.
 2. Über **GitHub Pages** oder einen beliebigen Webserver hosten.
 3. Im Browser des Smartphones öffnen und zum **Startbildschirm hinzufügen**.
-4. 
