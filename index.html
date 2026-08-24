@@ -459,7 +459,7 @@
                         <button class="delete-btn" onclick="deleteLog(${log.id})">✕</button>
                     </div>
                     <div class="log-row-note">
-                        <input type="text" placeholder="Note (optional)" value="${log.note || ''}" oninput="updateLog(${log.id}, 'note', this.value)">
+                        <input type="text" placeholder="Note (optional)" value="${log.note || ''}" onchange="updateLog(${log.id}, 'note', this.value)">
                     </div>
                 `;
                 logList.appendChild(item);
