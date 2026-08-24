@@ -3,29 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Work Time Tracker</title>
+    <title>Work & Expense Tracker</title>
 
     <!-- Custom Favicon & PWA Icons -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2310b981'/><circle cx='50' cy='55' r='28' stroke='white' stroke-width='6' fill='none'/><path d='M50 38 v17 h12' stroke='white' stroke-width='6' stroke-linecap='round' fill='none'/><rect x='42' y='18' width='16' height='8' rx='2' fill='white'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2310b981'/><circle cx='50' cy='55' r='28' stroke='white' stroke-width='6' fill='none'/><path d='M50 38 v17 h12' stroke='white' stroke-width='6' stroke-linecap='round' fill='none'/><rect x='42' y='18' width='16' height='8' rx='2' fill='white'/></svg>">
 
     <!-- Web App Manifest -->
-    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Work%20Time%20Tracker%22%2C%22short_name%22%3A%22TimeTracker%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2310b981%22%2C%22theme_color%22%3A%22%2310b981%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520100%2520100%2527%253E%253Crect%2520width%253D%2527100%2520100%2527%2520height%253D%2527100%2520100%2527%2520rx%253D%252720%2527%2520fill%253D%2527%252310b981%2527%252F%253E%253Ccircle%2520cx%253D%252750%2527%2520cy%253D%252755%2527%2520r%253D%252728%2527%2520stroke%253D%2527white%2527%2520stroke-width%253D%25276%2527%2520fill%253D%2527none%2527%252F%253E%253Cpath%2520d%253D%2527M50%252038%2520v17%2520h12%2527%2520stroke%253D%2527white%2527%2520stroke-width%253D%25276%2527%2520stroke-linecap%253D%2527round%2527%2520fill%253D%2527none%2527%252F%253E%253Crect%2520x%253D%252742%2527%2520y%253D%252718%2527%2520width%253D%252716%2527%2520height%253D%25278%2527%2520rx%253D%25272%2527%2520fill%253D%2527white%2527%252F%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D'>
+    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Work%20%26%20Expense%20Tracker%22%2C%22short_name%22%3A%22Tracker%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2310b981%22%2C%22theme_color%22%3A%22%2310b981%22%7D'>
 
-    <!-- Standalone Meta Tags -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="TimeTracker">
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
 
-    <!-- Service Worker Registration -->
+    <!-- Offline-Capable Cache-First Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const swCode = `
-                    self.addEventListener('install', e => self.skipWaiting());
-                    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
-                    self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
+                    const CACHE_NAME = 'tracker-v1';
+                    const ASSETS = [
+                        './',
+                        './index.html',
+                        './style.css',
+                        './app.js',
+                        './xlsx.full.min.js'
+                    ];
+
+                    self.addEventListener('install', e => {
+                        e.waitUntil(
+                            caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+                        );
+                        self.skipWaiting();
+                    });
+
+                    self.addEventListener('activate', e => {
+                        e.waitUntil(
+                            caches.keys().then(keys => 
+                                Promise.all(keys.map(k => k !== CACHE_NAME ? caches.delete(k) : null))
+                            )
+                        );
+                        return self.clients.claim();
+                    });
+
+                    self.addEventListener('fetch', e => {
+                        e.respondWith(
+                            caches.match(e.request).then(response => response || fetch(e.request))
+                        );
+                    });
                 `;
                 const blob = new Blob([swCode], { type: 'text/javascript' });
                 const swUrl = URL.createObjectURL(blob);
@@ -34,598 +58,762 @@
         }
     </script>
 
-    <!-- SheetJS for XLSX Export -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        :root {
-            --active-color: #10b981;
-            --passive-color: #3b82f6;
-            --break-color: #f59e0b;
-            --end-color: #64748b;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text: #0f172a;
-            --border: #e2e8f0;
-            --input-bg: #ffffff;
-            --subtext: #64748b;
-        }
-
-        [data-theme="dark"] {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f8fafc;
-            --border: #334155;
-            --input-bg: #0f172a;
-            --subtext: #94a3b8;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 0.75rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            -webkit-tap-highlight-color: transparent;
-            transition: background-color 0.2s ease, color 0.2s ease;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        h1 {
-            font-size: 1.25rem;
-            margin: 0;
-        }
-
-        .header-controls {
-            display: flex;
-            gap: 0.4rem;
-        }
-
-        .icon-btn {
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text);
-            font-size: 1.1rem;
-            padding: 0.3rem 0.6rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            background-color: var(--card-bg);
-        }
-
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.4rem;
-            margin-bottom: 1rem;
-        }
-
-        .stamp-btn {
-            border: none;
-            color: white;
-            padding: 1rem 0.2rem;
-            font-size: 0.9rem;
-            font-weight: 700;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-            transition: transform 0.05s ease, opacity 0.1s;
-        }
-
-        .stamp-btn:active {
-            transform: scale(0.96);
-            opacity: 0.9;
-        }
-
-        .btn-active { background-color: var(--active-color); }
-        .btn-passive { background-color: var(--passive-color); }
-        .btn-break { background-color: var(--break-color); }
-        .btn-end { background-color: var(--end-color); }
-
-        .actions {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .action-btn {
-            padding: 0.6rem 0.4rem;
-            border: 1px solid var(--border);
-            background: var(--card-bg);
-            color: var(--text);
-            border-radius: 0.375rem;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .action-btn.export {
-            background-color: #2563eb;
-            color: white;
-            border: none;
-        }
-
-        .summary-card, .logs-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            padding: 0.85rem;
-            margin-bottom: 1rem;
-            width: 100%;
-        }
-
-        .summary-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.4rem;
-            text-align: center;
-            margin-top: 0.75rem;
-        }
-
-        .summary-box {
-            padding: 0.4rem 0.2rem;
-            border-radius: 0.375rem;
-            background: var(--bg);
-            border: 1px solid var(--border);
-        }
-
-        .summary-box small {
-            display: block;
-            font-size: 0.65rem;
-            color: var(--subtext);
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .summary-box span {
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-
-        .log-item {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.6rem 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .log-item:last-child { border-bottom: none; }
-
-        .log-row-main {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            flex: 1;
-            min-width: 240px;
-        }
-
-        .log-row-note {
-            flex: 1 1 100%;
-            display: flex;
-            gap: 0.4rem;
-            margin-top: 0.2rem;
-        }
-
-        input[type="time"], input[type="date"], input[type="text"] {
-            font-family: inherit;
-            padding: 0.3rem 0.4rem;
-            border: 1px solid var(--border);
-            border-radius: 0.25rem;
-            font-size: 0.85rem;
-            background-color: var(--input-bg);
-            color: var(--text);
-            color-scheme: light dark;
-        }
-
-        input[type="date"] { flex: 1.2; min-width: 110px; }
-        input[type="time"] { flex: 0.9; min-width: 80px; }
-        input[type="text"] { flex: 1; width: 100%; }
-
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.4rem;
-            border-radius: 0.25rem;
-            color: white;
-            font-weight: 600;
-            font-size: 0.75rem;
-            text-align: center;
-            min-width: 55px;
-        }
-
-        .delete-btn {
-            background: none;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.1rem;
-            padding: 0 0.4rem;
-        }
-
-        .credits {
-            text-align: center;
-            font-size: 0.75rem;
-            color: var(--subtext);
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            opacity: 0.7;
-        }
-    </style>
+    <!-- Local SheetJS for XLSX Export (Offline) -->
+    <script src="xlsx.full.min.js"></script>
 </head>
 <body>
 
     <div class="header-container">
-        <h1>Work Time Tracker</h1>
+        <h1>Work & Expense Tracker</h1>
         <div class="header-controls">
             <button class="icon-btn" onclick="forceRefresh()" title="Refresh App">🔄</button>
             <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
         </div>
     </div>
 
-    <div class="button-grid">
-        <button class="stamp-btn btn-active" onclick="addTimestamp('Active')">Active</button>
-        <button class="stamp-btn btn-passive" onclick="addTimestamp('Passive')">Passive</button>
-        <button class="stamp-btn btn-break" onclick="addTimestamp('Break')">Break</button>
-        <button class="stamp-btn btn-end" onclick="addTimestamp('End')">End</button>
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('time')">⏱️ Time Tracker</button>
+        <button class="tab-btn" onclick="switchTab('expense')">💳 Expenses</button>
     </div>
 
+    <!-- TAB 1: TIME TRACKER -->
+    <div id="tab-time" class="tab-content active">
+        <div class="button-grid">
+            <button class="stamp-btn btn-active" onclick="addTimestamp('Active')">Active</button>
+            <button class="stamp-btn btn-passive" onclick="addTimestamp('Passive')">Passive</button>
+            <button class="stamp-btn btn-break" onclick="addTimestamp('Break')">Break</button>
+            <button class="stamp-btn btn-end" onclick="addTimestamp('End')">End</button>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-header">
+                <strong style="font-size: 0.85rem;">Daily Summary (Industrial Hours)</strong>
+                <input type="date" id="summary-date" onchange="renderTime()">
+            </div>
+            <div class="summary-grid">
+                <div class="summary-box">
+                    <small>Active</small>
+                    <span id="sum-active" style="color: var(--active-color);">0.00 h</span>
+                </div>
+                <div class="summary-box">
+                    <small>Passive</small>
+                    <span id="sum-passive" style="color: var(--passive-color);">0.00 h</span>
+                </div>
+                <div class="summary-box">
+                    <small>Break</small>
+                    <span id="sum-break" style="color: var(--break-color);">0.00 h</span>
+                </div>
+                <div class="summary-box">
+                    <small>Total</small>
+                    <span id="sum-total">0.00 h</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="logs-card">
+            <div id="log-list"></div>
+        </div>
+    </div>
+
+    <!-- TAB 2: EXPENSE TRACKER -->
+    <div id="tab-expense" class="tab-content">
+        <div class="form-card">
+            <h2>Add Expense</h2>
+            <div class="form-grid">
+                <input type="date" id="exp-date">
+                <input type="number" id="exp-amount" step="0.01" placeholder="Amount (€)">
+            </div>
+            <div class="form-grid">
+                <select id="exp-category">
+                    <option value="Meals">Meals / Food</option>
+                    <option value="Transport">Transport / Taxi</option>
+                    <option value="Hotel">Hotel</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select id="exp-payment">
+                    <option value="Corporate Card">Corporate Card</option>
+                    <option value="Personal Card">Personal Card</option>
+                    <option value="Cash">Cash</option>
+                </select>
+            </div>
+            <div class="form-grid full">
+                <input type="text" id="exp-note" placeholder="Description / Purpose (optional)">
+            </div>
+            <button class="submit-btn" onclick="addExpense()">Add Expense</button>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-header">
+                <strong style="font-size: 0.85rem;">Expense Totals</strong>
+            </div>
+            <div class="summary-grid expenses-grid">
+                <div class="summary-box">
+                    <small>Corporate Card</small>
+                    <span id="exp-sum-corp">0.00 €</span>
+                </div>
+                <div class="summary-box">
+                    <small>To Reimburse</small>
+                    <span id="exp-sum-reimburse" style="color: var(--active-color);">0.00 €</span>
+                </div>
+                <div class="summary-box">
+                    <small>Total</small>
+                    <span id="exp-sum-total">0.00 €</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="logs-card">
+            <div id="expense-list"></div>
+        </div>
+    </div>
+
+    <!-- GLOBAL ACTIONS -->
     <div class="actions">
         <button class="action-btn export" onclick="exportNativeXlsx()">Export XLSX</button>
         <button class="action-btn" onclick="exportJsonBackup()">Backup JSON</button>
         <button class="action-btn" onclick="document.getElementById('import-file').click()">Restore JSON</button>
-        <button class="action-btn" onclick="clearLogs()">Clear All</button>
+        <button class="action-btn" onclick="clearAllData()">Clear All Data</button>
     </div>
 
-    <!-- Versteckter File-Input für Import -->
     <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importJsonBackup(event)">
 
-    <div class="summary-card">
-        <div class="summary-header">
-            <strong style="font-size: 0.85rem;">Daily Summary (Industrial Hours)</strong>
-            <input type="date" id="summary-date" onchange="render()">
-        </div>
-        <div class="summary-grid">
-            <div class="summary-box">
-                <small>Active</small>
-                <span id="sum-active" style="color: var(--active-color);">0.00 h</span>
-            </div>
-            <div class="summary-box">
-                <small>Passive</small>
-                <span id="sum-passive" style="color: var(--passive-color);">0.00 h</span>
-            </div>
-            <div class="summary-box">
-                <small>Break</small>
-                <span id="sum-break" style="color: var(--break-color);">0.00 h</span>
-            </div>
-            <div class="summary-box">
-                <small>Total</small>
-                <span id="sum-total">0.00 h</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="logs-card">
-        <div id="log-list"></div>
-    </div>
-
     <div class="credits">
-        Developed by Luipolt & Gemini
+        Developed by Holger & Gemini
     </div>
 
-    <script>
-        let logs = JSON.parse(localStorage.getItem('trip_time_logs')) || [];
-
-        function forceRefresh() {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
-                    for (let registration of registrations) {
-                        registration.unregister();
-                    }
-                    window.location.reload(true);
-                });
-            } else {
-                window.location.reload(true);
-            }
-        }
-
-        // Theme Handling
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                document.getElementById('theme-btn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.getElementById('theme-btn').textContent = '☀️';
-            }
-        }
-
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('theme-btn').textContent = newTheme === 'dark' ? '☀️' : '🌙';
-        }
-
-        initTheme();
-
-        function getLocalDateString(d = new Date()) {
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        document.getElementById('summary-date').value = getLocalDateString();
-
-        function sortLogsChronologically() {
-            logs.sort((a, b) => {
-                const dtA = new Date(`${a.date}T${a.time}`);
-                const dtB = new Date(`${b.date}T${b.time}`);
-                return dtB - dtA;
-            });
-        }
-
-        function saveAndRender() {
-            sortLogsChronologically();
-            localStorage.setItem('trip_time_logs', JSON.stringify(logs));
-            render();
-        }
-
-        function addTimestamp(status) {
-            const now = new Date();
-            const dateStr = getLocalDateString(now);
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            
-            logs.unshift({
-                id: Date.now(),
-                date: dateStr,
-                time: `${hours}:${minutes}`,
-                status: status,
-                note: ''
-            });
-
-            saveAndRender();
-        }
-
-        function updateLog(id, field, value) {
-            const log = logs.find(l => l.id === id);
-            if (log) {
-                log[field] = value;
-                saveAndRender();
-            }
-        }
-
-        function deleteLog(id) {
-            if (confirm("Are you sure you want to delete this entry?")) {
-                logs = logs.filter(l => l.id !== id);
-                saveAndRender();
-            }
-        }
-
-        function clearLogs() {
-            if (confirm("Are you sure you want to delete all entries?")) {
-                logs = [];
-                saveAndRender();
-            }
-        }
-
-        function exportJsonBackup() {
-            if (logs.length === 0) {
-                alert("No data to export.");
-                return;
-            }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logs, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `timetracker_backup_${getLocalDateString()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importJsonBackup(event) {
-            const fileReader = new FileReader();
-            fileReader.onload = function(e) {
-                try {
-                    const importedLogs = JSON.parse(e.target.result);
-                    if (Array.isArray(importedLogs)) {
-                        if (confirm("Do you want to restore this backup? Existing data will be overwritten.")) {
-                            logs = importedLogs;
-                            saveAndRender();
-                            alert("Backup successfully restored!");
-                        }
-                    } else {
-                        alert("Invalid backup file format.");
-                    }
-                } catch (err) {
-                    alert("Error reading JSON file.");
-                }
-            };
-            if (event.target.files[0]) {
-                fileReader.readAsText(event.target.files[0]);
-            }
-        }
-
-        function getStatusColor(status) {
-            switch(status) {
-                case 'Active': return 'var(--active-color)';
-                case 'Passive': return 'var(--passive-color)';
-                case 'Break': return 'var(--break-color)';
-                case 'End': return 'var(--end-color)';
-                default: return '#64748b';
-            }
-        }
-
-        function getStatusAbbreviation(status) {
-            switch(status) {
-                case 'Active': return 'A';
-                case 'Passive': return 'P';
-                case 'Break': return 'B';
-                case 'End': return 'E';
-                default: return '?';
-            }
-        }
-
-        function calculateDailySummary(selectedDate) {
-            const sortedLogs = [...logs].sort((a, b) => {
-                const dtA = new Date(`${a.date}T${a.time}`);
-                const dtB = new Date(`${b.date}T${b.time}`);
-                return dtA - dtB;
-            });
-
-            let totals = { Active: 0, Passive: 0, Break: 0 };
-
-            for (let i = 0; i < sortedLogs.length - 1; i++) {
-                const current = sortedLogs[i];
-                const next = sortedLogs[i + 1];
-
-                if (current.date === selectedDate) {
-                    const t1 = new Date(`${current.date}T${current.time}`);
-                    const t2 = new Date(`${next.date}T${next.time}`);
-                    
-                    const diffMs = t2 - t1;
-                    if (diffMs > 0) {
-                        const hoursDecimal = diffMs / (1000 * 60 * 60);
-                        if (totals.hasOwnProperty(current.status) && current.status !== 'End') {
-                            totals[current.status] += hoursDecimal;
-                        }
-                    }
-                }
-            }
-
-            return totals;
-        }
-
-        function render() {
-            const logList = document.getElementById('log-list');
-            logList.innerHTML = '';
-
-            if (logs.length === 0) {
-                logList.innerHTML = '<div style="text-align:center; color:var(--subtext); font-size:0.85rem;">No timestamps logged yet.</div>';
-            }
-
-            logs.forEach(log => {
-                const item = document.createElement('div');
-                item.className = 'log-item';
-                item.innerHTML = `
-                    <div class="log-row-main">
-                        <input type="date" value="${log.date}" onchange="updateLog(${log.id}, 'date', this.value)">
-                        <input type="time" value="${log.time}" onchange="updateLog(${log.id}, 'time', this.value)">
-                        <span class="badge" style="background:${getStatusColor(log.status)}">${log.status}</span>
-                        <button class="delete-btn" onclick="deleteLog(${log.id})">✕</button>
-                    </div>
-                    <div class="log-row-note">
-                        <input type="text" placeholder="Note (optional)" value="${log.note || ''}" onchange="updateLog(${log.id}, 'note', this.value)">
-                    </div>
-                `;
-                logList.appendChild(item);
-            });
-
-            const selectedDate = document.getElementById('summary-date').value;
-            const totals = calculateDailySummary(selectedDate);
-
-            document.getElementById('sum-active').textContent = totals.Active.toFixed(2) + ' h';
-            document.getElementById('sum-passive').textContent = totals.Passive.toFixed(2) + ' h';
-            document.getElementById('sum-break').textContent = totals.Break.toFixed(2) + ' h';
-            
-            const totalWork = totals.Active + totals.Passive;
-            document.getElementById('sum-total').textContent = totalWork.toFixed(2) + ' h';
-        }
-
-        function exportNativeXlsx() {
-            if (logs.length === 0) {
-                alert("No logs to export.");
-                return;
-            }
-
-            const grouped = {};
-            logs.forEach(l => {
-                if (!grouped[l.date]) grouped[l.date] = [];
-                grouped[l.date].push(l);
-            });
-
-            const dates = Object.keys(grouped).sort();
-
-            dates.forEach(d => {
-                grouped[d].sort((a, b) => a.time.localeCompare(b.time));
-            });
-
-            let maxRows = 0;
-            dates.forEach(d => {
-                if (grouped[d].length > maxRows) maxRows = grouped[d].length;
-            });
-
-            const sheetData = [];
-            sheetData.push(dates);
-
-            for (let i = 0; i < maxRows; i++) {
-                const row = [];
-                dates.forEach(d => {
-                    const entry = grouped[d][i];
-                    if (entry) {
-                        const abbr = getStatusAbbreviation(entry.status);
-                        const noteStr = entry.note ? ` (${entry.note})` : '';
-                        row.push(`${abbr} ${entry.time}${noteStr}`);
-                    } else {
-                        row.push('');
-                    }
-                });
-                sheetData.push(row);
-            }
-
-            sheetData.push(dates.map(() => ''));
-
-            const activeRow = [];
-            const passiveRow = [];
-            const breakRow = [];
-            const totalRow = [];
-
-            dates.forEach(d => {
-                const totals = calculateDailySummary(d);
-                activeRow.push(`Active: ${totals.Active.toFixed(2)}h`);
-                passiveRow.push(`Passive: ${totals.Passive.toFixed(2)}h`);
-                breakRow.push(`Break: ${totals.Break.toFixed(2)}h`);
-                totalRow.push(`Total: ${(totals.Active + totals.Passive).toFixed(2)}h`);
-            });
-
-            sheetData.push(activeRow);
-            sheetData.push(passiveRow);
-            sheetData.push(breakRow);
-            sheetData.push(totalRow);
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(sheetData);
-            XLSX.utils.book_append_sheet(wb, ws, "Work Logs");
-
-            XLSX.writeFile(wb, `work_matrix_${getLocalDateString()}.xlsx`);
-        }
-
-        render();
-    </script>
+    <!-- External JavaScript Logic -->
+    <script src="app.js"></script>
 </body>
 </html>
+:root {
+    --active-color: #10b981;
+    --passive-color: #3b82f6;
+    --break-color: #f59e0b;
+    --end-color: #64748b;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text: #0f172a;
+    --border: #e2e8f0;
+    --input-bg: #ffffff;
+    --subtext: #64748b;
+    --expense-color: #8b5cf6;
+}
+
+[data-theme="dark"] {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --text: #f8fafc;
+    --border: #334155;
+    --input-bg: #0f172a;
+    --subtext: #94a3b8;
+}
+
+* { 
+    box-sizing: border-box; 
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0.75rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+h1 { font-size: 1.25rem; margin: 0; }
+h2 { font-size: 1rem; margin: 0 0 0.5rem 0; color: var(--text); }
+
+.header-controls { display: flex; gap: 0.4rem; }
+
+.icon-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 1.1rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    background-color: var(--card-bg);
+}
+
+.tab-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 0.6rem;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-weight: 600;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.tab-btn.active {
+    background-color: var(--active-color);
+    color: white;
+    border-color: var(--active-color);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.button-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.stamp-btn {
+    border: none;
+    color: white;
+    padding: 1rem 0.2rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    transition: transform 0.05s ease, opacity 0.1s;
+}
+
+.stamp-btn:active { transform: scale(0.96); opacity: 0.9; }
+
+.btn-active { background-color: var(--active-color); }
+.btn-passive { background-color: var(--passive-color); }
+.btn-break { background-color: var(--break-color); }
+.btn-end { background-color: var(--end-color); }
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.action-btn {
+    padding: 0.6rem 0.4rem;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    border-radius: 0.375rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.action-btn.export { background-color: #2563eb; color: white; border: none; }
+
+.summary-card, .logs-card, .form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.85rem;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+    text-align: center;
+    margin-top: 0.75rem;
+}
+
+.summary-grid.expenses-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.summary-box {
+    padding: 0.4rem 0.2rem;
+    border-radius: 0.375rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+}
+
+.summary-box small {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--subtext);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.summary-box span { font-size: 0.85rem; font-weight: 700; }
+
+.log-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.log-item:last-child { border-bottom: none; }
+
+.log-row-main {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 1;
+    min-width: 240px;
+}
+
+.log-row-note {
+    flex: 1 1 100%;
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-grid.full { grid-template-columns: 1fr; }
+
+input[type="time"], input[type="date"], input[type="text"], input[type="number"], select {
+    font-family: inherit;
+    padding: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    background-color: var(--input-bg);
+    color: var(--text);
+    color-scheme: light dark;
+    width: 100%;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.4rem;
+    border-radius: 0.25rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-align: center;
+    min-width: 55px;
+}
+
+.badge-pay { background-color: var(--expense-color); }
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.1rem;
+    padding: 0 0.4rem;
+}
+
+.submit-btn {
+    background-color: var(--expense-color);
+    color: white;
+    border: none;
+    padding: 0.6rem;
+    border-radius: 0.375rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+}
+
+.credits {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--subtext);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+let logs = JSON.parse(localStorage.getItem('trip_time_logs')) || [];
+let expenses = JSON.parse(localStorage.getItem('trip_expense_logs')) || [];
+
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    if (tabName === 'time') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('tab-time').classList.add('active');
+    } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('tab-expense').classList.add('active');
+    }
+}
+
+function forceRefresh() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) registration.unregister();
+            window.location.reload(true);
+        });
+    } else {
+        window.location.reload(true);
+    }
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('theme-btn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('theme-btn').textContent = '☀️';
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.getElementById('theme-btn').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+}
+
+initTheme();
+
+function getLocalDateString(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+const sumDateInput = document.getElementById('summary-date');
+const expDateInput = document.getElementById('exp-date');
+if (sumDateInput) sumDateInput.value = getLocalDateString();
+if (expDateInput) expDateInput.value = getLocalDateString();
+
+function saveAndRender() {
+    logs.sort((a, b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
+    expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    localStorage.setItem('trip_time_logs', JSON.stringify(logs));
+    localStorage.setItem('trip_expense_logs', JSON.stringify(expenses));
+    
+    renderTime();
+    renderExpenses();
+}
+
+// TIME TRACKER FUNCTIONS
+function addTimestamp(status) {
+    const now = new Date();
+    logs.unshift({
+        id: Date.now(),
+        date: getLocalDateString(now),
+        time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+        status: status,
+        note: ''
+    });
+    saveAndRender();
+}
+
+function updateLog(id, field, value) {
+    const log = logs.find(l => l.id === id);
+    if (log) { log[field] = value; saveAndRender(); }
+}
+
+function deleteLog(id) {
+    if (confirm("Delete this time entry?")) {
+        logs = logs.filter(l => l.id !== id);
+        saveAndRender();
+    }
+}
+
+function getStatusColor(status) {
+    switch(status) {
+        case 'Active': return 'var(--active-color)';
+        case 'Passive': return 'var(--passive-color)';
+        case 'Break': return 'var(--break-color)';
+        case 'End': return 'var(--end-color)';
+        default: return '#64748b';
+    }
+}
+
+function calculateDailySummary(selectedDate) {
+    const sortedLogs = [...logs].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+    let totals = { Active: 0, Passive: 0, Break: 0 };
+
+    for (let i = 0; i < sortedLogs.length - 1; i++) {
+        const current = sortedLogs[i];
+        const next = sortedLogs[i + 1];
+
+        if (current.date === selectedDate) {
+            const diffMs = new Date(`${next.date}T${next.time}`) - new Date(`${current.date}T${current.time}`);
+            if (diffMs > 0) {
+                const hours = diffMs / (1000 * 60 * 60);
+                if (totals.hasOwnProperty(current.status) && current.status !== 'End') {
+                    totals[current.status] += hours;
+                }
+            }
+        }
+    }
+    return totals;
+}
+
+function renderTime() {
+    const logList = document.getElementById('log-list');
+    if (!logList) return;
+    logList.innerHTML = logs.length === 0 ? '<div style="text-align:center; color:var(--subtext); font-size:0.85rem;">No timestamps logged.</div>' : '';
+
+    logs.forEach(log => {
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        item.innerHTML = `
+            <div class="log-row-main">
+                <input type="date" value="${log.date}" onchange="updateLog(${log.id}, 'date', this.value)">
+                <input type="time" value="${log.time}" onchange="updateLog(${log.id}, 'time', this.value)">
+                <span class="badge" style="background:${getStatusColor(log.status)}">${log.status}</span>
+                <button class="delete-btn" onclick="deleteLog(${log.id})">✕</button>
+            </div>
+            <div class="log-row-note">
+                <input type="text" placeholder="Note (optional)" value="${log.note || ''}" onchange="updateLog(${log.id}, 'note', this.value)">
+            </div>
+        `;
+        logList.appendChild(item);
+    });
+
+    const selectedDate = document.getElementById('summary-date') ? document.getElementById('summary-date').value : getLocalDateString();
+    const totals = calculateDailySummary(selectedDate);
+    if (document.getElementById('sum-active')) document.getElementById('sum-active').textContent = totals.Active.toFixed(2) + ' h';
+    if (document.getElementById('sum-passive')) document.getElementById('sum-passive').textContent = totals.Passive.toFixed(2) + ' h';
+    if (document.getElementById('sum-break')) document.getElementById('sum-break').textContent = totals.Break.toFixed(2) + ' h';
+    if (document.getElementById('sum-total')) document.getElementById('sum-total').textContent = (totals.Active + totals.Passive).toFixed(2) + ' h';
+}
+
+// EXPENSE TRACKER FUNCTIONS
+function addExpense() {
+    const date = document.getElementById('exp-date').value;
+    const amount = parseFloat(document.getElementById('exp-amount').value);
+    const category = document.getElementById('exp-category').value;
+    const payment = document.getElementById('exp-payment').value;
+    const note = document.getElementById('exp-note').value;
+
+    if (!date || isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid date and amount.");
+        return;
+    }
+
+    expenses.unshift({
+        id: Date.now(),
+        date,
+        amount,
+        category,
+        payment,
+        note
+    });
+
+    document.getElementById('exp-amount').value = '';
+    document.getElementById('exp-note').value = '';
+    saveAndRender();
+}
+
+function updateExpense(id, field, value) {
+    const exp = expenses.find(e => e.id === id);
+    if (exp) {
+        exp[field] = field === 'amount' ? parseFloat(value) || 0 : value;
+        saveAndRender();
+    }
+}
+
+function deleteExpense(id) {
+    if (confirm("Delete this expense?")) {
+        expenses = expenses.filter(e => e.id !== id);
+        saveAndRender();
+    }
+}
+
+function renderExpenses() {
+    const list = document.getElementById('expense-list');
+    if (!list) return;
+    list.innerHTML = expenses.length === 0 ? '<div style="text-align:center; color:var(--subtext); font-size:0.85rem;">No expenses recorded.</div>' : '';
+
+    let corpTotal = 0;
+    let reimburseTotal = 0;
+
+    expenses.forEach(exp => {
+        if (exp.payment === 'Corporate Card') {
+            corpTotal += exp.amount;
+        } else {
+            reimburseTotal += exp.amount;
+        }
+
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        item.innerHTML = `
+            <div class="log-row-main">
+                <input type="date" value="${exp.date}" onchange="updateExpense(${exp.id}, 'date', this.value)">
+                <input type="number" step="0.01" style="width:75px;" value="${exp.amount.toFixed(2)}" onchange="updateExpense(${exp.id}, 'amount', this.value)">
+                <span class="badge badge-pay">${exp.payment === 'Corporate Card' ? 'Corp' : 'Self'}</span>
+                <button class="delete-btn" onclick="deleteExpense(${exp.id})">✕</button>
+            </div>
+            <div class="log-row-note">
+                <select onchange="updateExpense(${exp.id}, 'category', this.value)" style="flex:1;">
+                    <option value="Meals" ${exp.category === 'Meals' ? 'selected' : ''}>Meals</option>
+                    <option value="Transport" ${exp.category === 'Transport' ? 'selected' : ''}>Transport</option>
+                    <option value="Hotel" ${exp.category === 'Hotel' ? 'selected' : ''}>Hotel</option>
+                    <option value="Other" ${exp.category === 'Other' ? 'selected' : ''}>Other</option>
+                </select>
+                <select onchange="updateExpense(${exp.id}, 'payment', this.value)" style="flex:1;">
+                    <option value="Corporate Card" ${exp.payment === 'Corporate Card' ? 'selected' : ''}>Corp Card</option>
+                    <option value="Personal Card" ${exp.payment === 'Personal Card' ? 'selected' : ''}>Pers Card</option>
+                    <option value="Cash" ${exp.payment === 'Cash' ? 'selected' : ''}>Cash</option>
+                </select>
+                <input type="text" placeholder="Note" value="${exp.note || ''}" onchange="updateExpense(${exp.id}, 'note', this.value)" style="flex:1.5;">
+            </div>
+        `;
+        list.appendChild(item);
+    });
+
+    if (document.getElementById('exp-sum-corp')) document.getElementById('exp-sum-corp').textContent = corpTotal.toFixed(2) + ' €';
+    if (document.getElementById('exp-sum-reimburse')) document.getElementById('exp-sum-reimburse').textContent = reimburseTotal.toFixed(2) + ' €';
+    if (document.getElementById('exp-sum-total')) document.getElementById('exp-sum-total').textContent = (corpTotal + reimburseTotal).toFixed(2) + ' €';
+}
+
+// BACKUP & EXPORT
+function clearAllData() {
+    if (confirm("Are you sure you want to clear ALL time logs and expenses?")) {
+        logs = [];
+        expenses = [];
+        saveAndRender();
+    }
+}
+
+function exportJsonBackup() {
+    if (logs.length === 0 && expenses.length === 0) {
+        alert("No data to export.");
+        return;
+    }
+    const data = { logs, expenses };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    const anchor = document.createElement('a');
+    anchor.setAttribute("href", dataStr);
+    anchor.setAttribute("download", `tracker_backup_${getLocalDateString()}.json`);
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+}
+
+function importJsonBackup(event) {
+    const fileReader = new FileReader();
+    fileReader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (confirm("Overwrite current data with this backup?")) {
+                if (Array.isArray(imported)) {
+                    logs = imported;
+                } else {
+                    logs = imported.logs || [];
+                    expenses = imported.expenses || [];
+                }
+                saveAndRender();
+                alert("Backup restored!");
+            }
+        } catch (err) {
+            alert("Error parsing JSON file.");
+        }
+    };
+    if (event.target.files[0]) fileReader.readAsText(event.target.files[0]);
+}
+
+function exportNativeXlsx() {
+    if (typeof XLSX === 'undefined') {
+        alert("XLSX library not loaded. Make sure xlsx.full.min.js is available.");
+        return;
+    }
+    if (logs.length === 0 && expenses.length === 0) {
+        alert("No data to export.");
+        return;
+    }
+
+    const wb = XLSX.utils.book_new();
+
+    if (logs.length > 0) {
+        const grouped = {};
+        logs.forEach(l => {
+            if (!grouped[l.date]) grouped[l.date] = [];
+            grouped[l.date].push(l);
+        });
+        const dates = Object.keys(grouped).sort();
+        dates.forEach(d => grouped[d].sort((a, b) => a.time.localeCompare(b.time)));
+
+        let maxRows = 0;
+        dates.forEach(d => { if (grouped[d].length > maxRows) maxRows = grouped[d].length; });
+
+        const sheetData = [dates];
+        for (let i = 0; i < maxRows; i++) {
+            const row = [];
+            dates.forEach(d => {
+                const entry = grouped[d][i];
+                if (entry) {
+                    const abbr = entry.status.charAt(0);
+                    const noteStr = entry.note ? ` (${entry.note})` : '';
+                    row.push(`${abbr} ${entry.time}${noteStr}`);
+                } else {
+                    row.push('');
+                }
+            });
+            sheetData.push(row);
+        }
+
+        sheetData.push(dates.map(() => ''));
+        const activeRow = [], passiveRow = [], breakRow = [], totalRow = [];
+        dates.forEach(d => {
+            const totals = calculateDailySummary(d);
+            activeRow.push(`Active: ${totals.Active.toFixed(2)}h`);
+            passiveRow.push(`Passive: ${totals.Passive.toFixed(2)}h`);
+            breakRow.push(`Break: ${totals.Break.toFixed(2)}h`);
+            totalRow.push(`Total: ${(totals.Active + totals.Passive).toFixed(2)}h`);
+        });
+        sheetData.push(activeRow, passiveRow, breakRow, totalRow);
+
+        const wsTime = XLSX.utils.aoa_to_sheet(sheetData);
+        XLSX.utils.book_append_sheet(wb, wsTime, "Work Logs");
+    }
+
+    if (expenses.length > 0) {
+        const expHeaders = [["Date", "Amount (€)", "Category", "Payment Method", "Note"]];
+        const expRows = expenses.map(e => [e.date, e.amount, e.category, e.payment, e.note || '']);
+        const wsExp = XLSX.utils.aoa_to_sheet(expHeaders.concat(expRows));
+        XLSX.utils.book_append_sheet(wb, wsExp, "Expenses");
+    }
+
+    XLSX.writeFile(wb, `travel_report_${getLocalDateString()}.xlsx`);
+}
+
+saveAndRender();
+                              
