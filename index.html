@@ -74,73 +74,6 @@
             transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        /* Splash Screen Overlay */
-        #splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #10b981;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 3rem 1.5rem;
-            z-index: 9999;
-            cursor: pointer;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
-        }
-
-        #splash-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .splash-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            text-align: center;
-        }
-
-        .splash-icon {
-            width: 90px;
-            height: 90px;
-            margin-bottom: 1.2rem;
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
-        }
-
-        .splash-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin: 0 0 0.5rem 0;
-            letter-spacing: -0.02em;
-        }
-
-        .splash-subtitle {
-            font-size: 0.95rem;
-            opacity: 0.9;
-            margin: 0;
-            animation: pulse 1.8s infinite;
-        }
-
-        .splash-credits {
-            font-size: 0.8rem;
-            opacity: 0.8;
-            text-align: center;
-            line-height: 1.4;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-
         .header-container {
             display: flex;
             justify-content: space-between;
@@ -327,23 +260,6 @@
 </head>
 <body>
 
-    <!-- Interaktiver Splash Screen -->
-    <<div id="splash-screen" ontouchstart="dismissSplash()" onclick="dismissSplash()">
-        <div class="splash-content">
-            <svg class="splash-icon" viewBox="0 0 100 100">
-                <rect width="100" height="100" rx="20" fill="white" fill-opacity="0.2"/>
-                <circle cx="50" cy="55" r="28" stroke="white" stroke-width="6" fill="none"/>
-                <path d="M50 38 v17 h12" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
-                <rect x="42" y="18" width="16" height="8" rx="2" fill="white"/>
-            </svg>
-            <h1 class="splash-title">Work Time Tracker</h1>
-            <p class="splash-subtitle">Tippe auf den Bildschirm zum Starten</p>
-        </div>
-        <div class="splash-credits">
-            created by <strong>Luipolt</strong> & <strong>Gemini</strong>
-        </div>
-    </div>
-
     <div class="header-container">
         <h1>Work Time Tracker</h1>
         <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
@@ -392,13 +308,6 @@
 
     <script>
         let logs = JSON.parse(localStorage.getItem('trip_time_logs')) || [];
-
-        function dismissSplash() {
-            const splash = document.getElementById('splash-screen');
-            if (splash) {
-                splash.classList.add('hidden');
-            }
-        }
 
         // Theme Handling
         function initTheme() {
@@ -471,7 +380,7 @@
         }
 
         function deleteLog(id) {
-            if (confirm("Möchtest du diesen Eintrag wirklich löschen?")) {
+            if (confirm("Are you sure you want to delete this entry?")) {
                 logs = logs.filter(l => l.id !== id);
                 saveAndRender();
             }
@@ -549,4 +458,96 @@
                     <div class="log-row-main">
                         <input type="date" value="${log.date}" onchange="updateLog(${log.id}, 'date', this.value)">
                         <input type="time" value="${log.time}" onchange="updateLog(${log.id}, 'time', this.value)">
-        
+                        <span class="badge" style="background:${getStatusColor(log.status)}">${log.status}</span>
+                        <button class="delete-btn" onclick="deleteLog(${log.id})">✕</button>
+                    </div>
+                    <div class="log-row-note">
+                        <input type="text" placeholder="Note (optional)" value="${log.note || ''}" onchange="updateLog(${log.id}, 'note', this.value)">
+                    </div>
+                `;
+                logList.appendChild(item);
+            });
+
+            const selectedDate = document.getElementById('summary-date').value;
+            const totals = calculateDailySummary(selectedDate);
+
+            document.getElementById('sum-active').textContent = totals.Active.toFixed(2) + ' h';
+            document.getElementById('sum-passive').textContent = totals.Passive.toFixed(2) + ' h';
+            document.getElementById('sum-break').textContent = totals.Break.toFixed(2) + ' h';
+            
+            const totalWork = totals.Active + totals.Passive;
+            document.getElementById('sum-total').textContent = totalWork.toFixed(2) + ' h';
+        }
+
+        function exportNativeXlsx() {
+            if (logs.length === 0) {
+                alert("No logs to export.");
+                return;
+            }
+
+            const grouped = {};
+            logs.forEach(l => {
+                if (!grouped[l.date]) grouped[l.date] = [];
+                grouped[l.date].push(l);
+            });
+
+            const dates = Object.keys(grouped).sort();
+
+            dates.forEach(d => {
+                grouped[d].sort((a, b) => a.time.localeCompare(b.time));
+            });
+
+            let maxRows = 0;
+            dates.forEach(d => {
+                if (grouped[d].length > maxRows) maxRows = grouped[d].length;
+            });
+
+            const sheetData = [];
+            sheetData.push(dates);
+
+            for (let i = 0; i < maxRows; i++) {
+                const row = [];
+                dates.forEach(d => {
+                    const entry = grouped[d][i];
+                    if (entry) {
+                        const abbr = getStatusAbbreviation(entry.status);
+                        const noteStr = entry.note ? ` (${entry.note})` : '';
+                        row.push(`${abbr} ${entry.time}${noteStr}`);
+                    } else {
+                        row.push('');
+                    }
+                });
+                sheetData.push(row);
+            }
+
+            sheetData.push(dates.map(() => ''));
+
+            const activeRow = [];
+            const passiveRow = [];
+            const breakRow = [];
+            const totalRow = [];
+
+            dates.forEach(d => {
+                const totals = calculateDailySummary(d);
+                activeRow.push(`Active: ${totals.Active.toFixed(2)}h`);
+                passiveRow.push(`Passive: ${totals.Passive.toFixed(2)}h`);
+                breakRow.push(`Break: ${totals.Break.toFixed(2)}h`);
+                totalRow.push(`Total: ${(totals.Active + totals.Passive).toFixed(2)}h`);
+            });
+
+            sheetData.push(activeRow);
+            sheetData.push(passiveRow);
+            sheetData.push(breakRow);
+            sheetData.push(totalRow);
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            XLSX.utils.book_append_sheet(wb, ws, "Work Logs");
+
+            XLSX.writeFile(wb, `work_matrix_${getLocalDateString()}.xlsx`);
+        }
+
+        render();
+    </script>
+</body>
+</html>
