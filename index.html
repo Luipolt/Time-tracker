@@ -18,7 +18,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="TimeTracker">
 
-    <!-- Service Worker Registrierung -->
+    <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -34,7 +34,7 @@
         }
     </script>
 
-    <!-- SheetJS für XLSX-Export -->
+    <!-- SheetJS for XLSX Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -87,7 +87,12 @@
             margin: 0;
         }
 
-        .theme-toggle {
+        .header-controls {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .icon-btn {
             background: none;
             border: 1px solid var(--border);
             color: var(--text);
@@ -128,20 +133,22 @@
         .btn-end { background-color: var(--end-color); }
 
         .actions {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 0.5rem;
             margin-bottom: 1rem;
         }
 
         .action-btn {
-            flex: 1;
-            padding: 0.6rem;
+            padding: 0.6rem 0.4rem;
             border: 1px solid var(--border);
             background: var(--card-bg);
             color: var(--text);
             border-radius: 0.375rem;
             font-weight: 600;
+            font-size: 0.8rem;
             cursor: pointer;
+            text-align: center;
         }
 
         .action-btn.export {
@@ -256,13 +263,25 @@
             font-size: 1.1rem;
             padding: 0 0.4rem;
         }
+
+        .credits {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--subtext);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
 
     <div class="header-container">
         <h1>Work Time Tracker</h1>
-        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
+        <div class="header-controls">
+            <button class="icon-btn" onclick="forceRefresh()" title="Refresh App">🔄</button>
+            <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
+        </div>
     </div>
 
     <div class="button-grid">
@@ -274,8 +293,13 @@
 
     <div class="actions">
         <button class="action-btn export" onclick="exportNativeXlsx()">Export XLSX</button>
+        <button class="action-btn" onclick="exportJsonBackup()">Backup JSON</button>
+        <button class="action-btn" onclick="document.getElementById('import-file').click()">Restore JSON</button>
         <button class="action-btn" onclick="clearLogs()">Clear All</button>
     </div>
+
+    <!-- Versteckter File-Input für Import -->
+    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importJsonBackup(event)">
 
     <div class="summary-card">
         <div class="summary-header">
@@ -306,8 +330,25 @@
         <div id="log-list"></div>
     </div>
 
+    <div class="credits">
+        Developed by Luipolt & Gemini
+    </div>
+
     <script>
         let logs = JSON.parse(localStorage.getItem('trip_time_logs')) || [];
+
+        function forceRefresh() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                    window.location.reload(true);
+                });
+            } else {
+                window.location.reload(true);
+            }
+        }
 
         // Theme Handling
         function initTheme() {
@@ -390,6 +431,43 @@
             if (confirm("Are you sure you want to delete all entries?")) {
                 logs = [];
                 saveAndRender();
+            }
+        }
+
+        function exportJsonBackup() {
+            if (logs.length === 0) {
+                alert("No data to export.");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logs, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `timetracker_backup_${getLocalDateString()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importJsonBackup(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const importedLogs = JSON.parse(e.target.result);
+                    if (Array.isArray(importedLogs)) {
+                        if (confirm("Do you want to restore this backup? Existing data will be overwritten.")) {
+                            logs = importedLogs;
+                            saveAndRender();
+                            alert("Backup successfully restored!");
+                        }
+                    } else {
+                        alert("Invalid backup file format.");
+                    }
+                } catch (err) {
+                    alert("Error reading JSON file.");
+                }
+            };
+            if (event.target.files[0]) {
+                fileReader.readAsText(event.target.files[0]);
             }
         }
 
