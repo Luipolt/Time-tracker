@@ -1,26 +1,26 @@
-# Work Time Tracker (PWA)
+# Work Time Tracker
 
-Ein minimalistischer, datenschutzfreundlicher Arbeitszeittracker als Single-Page Web-App. Entwickelt für die schnelle Erfassung von Stempelzeiten unterwegs inklusive automatischer Industriestunden-Berechnung und nativem XLSX-Export.
+A lightweight, privacy-focused work and travel time tracker built as a single-page web application. It operates entirely without a backend, stores all data locally in the browser, can be hosted directly via GitHub Pages, and is installable as a PWA on mobile devices.
 
-## 🚀 Features
+## Features
 
-* **Stempel-Typen:** Erfassung von *Active*, *Passive*, *Break* und *End*.
-* **Industriestunden-Berechnung:** Automatische Summenbildung (Dezimalstunden) pro Tag. Keine Zeitzählung nach dem Status *End*.
-* **Nativer XLSX-Export:** Erstellt eine übersichtliche Matrix-Tabelle aller Tage direkt als Excel-Datei via SheetJS.
-* **Dark Mode:** Manuelles Umschalten (Sonne/Mond) sowie automatische Übernahme des Systemschemas.
-* **Datenschutz & Offline-First:** Alle Daten verbleiben lokal im Browser (`localStorage`). Funktioniert komplett ohne Server oder Datenbank.
-* **PWA & Standalone:** Kann auf Android/iOS direkt als App auf dem Startbildschirm installiert werden (inkl. farbigem App-Icon).
-* **Anpassbar:** Nachträgliches Bearbeiten von Datum, Uhrzeit und Notizen mit automatischer chronologischer Neusortierung.
+* **Quick Logging:** One-click time stamping with predefined statuses (`Active`, `Passive`, `Break`, `End`).
+* **Industrial Hours Calculation:** Automatic daily totals calculated in decimal hours (e.g., 7.50 h) for easy reporting.
+* **Excel Export (Matrix Format):** Generates `.xlsx` files with date-column matrix layouts including status abbreviations and optional notes.
+* **Backup & Restore:** Full JSON export and import capabilities to safeguard and migrate your data.
+* **Offline & PWA Ready:** Integrated Web App Manifest and Service Worker support desktop and mobile installation with full offline support.
+* **Dark / Light Mode:** Automatically aligns with system preferences, with an instant manual toggle switch.
+* **Privacy-First:** All data stays strictly local in your browser's `localStorage`.
 
-## 🛠️ Technologien
+## Installation & Deployment
 
-* **HTML5 / CSS3** (Vanilla CSS mit Design-Variablen)
-* **JavaScript** (ES6+)
-* **SheetJS (xlsx.full.min.js)** für den Excel-Export
-* **Service Worker & Web App Manifest** für PWA-Funktionalität
+1. Clone or download the repository.
+2. Open `index.html` directly in any web browser or deploy via **GitHub Pages**.
+3. Add to your mobile home screen ("Install PWA / Web App").
 
-## 📦 Installation & Nutzung
+## Dependencies
 
-1. Repository klonen oder den Code in eine `index.html` einfügen.
-2. Über **GitHub Pages** oder einen beliebigen Webserver hosten.
-3. Im Browser des Smartphones öffnen und zum **Startbildschirm hinzufügen**.
+* [SheetJS (xlsx)](https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js) – Used for client-side Excel generation.
+
+---
+Developed by Luipolt & Gemini
