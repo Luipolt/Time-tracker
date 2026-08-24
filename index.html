@@ -5,13 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Work Time Tracker</title>
 
-    <!-- Web App Manifest -->
-        <!-- Custom Favicon & PWA Icons (Farbiges Stoppuhr-Icon) -->
+    <!-- Custom Favicon & PWA Icons -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2310b981'/><circle cx='50' cy='55' r='28' stroke='white' stroke-width='6' fill='none'/><path d='M50 38 v17 h12' stroke='white' stroke-width='6' stroke-linecap='round' fill='none'/><rect x='42' y='18' width='16' height='8' rx='2' fill='white'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2310b981'/><circle cx='50' cy='55' r='28' stroke='white' stroke-width='6' fill='none'/><path d='M50 38 v17 h12' stroke='white' stroke-width='6' stroke-linecap='round' fill='none'/><rect x='42' y='18' width='16' height='8' rx='2' fill='white'/></svg>">
 
-    <!-- Web App Manifest mit grünem Icon & Theme-Farbe -->
+    <!-- Web App Manifest -->
     <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Work%20Time%20Tracker%22%2C%22short_name%22%3A%22TimeTracker%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2310b981%22%2C%22theme_color%22%3A%22%2310b981%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520100%2520100%2527%253E%253Crect%2520width%253D%2527100%2520100%2527%2520height%253D%2527100%2520100%2527%2520rx%253D%252720%2527%2520fill%253D%2527%252310b981%2527%252F%253E%253Ccircle%2520cx%253D%252750%2527%2520cy%253D%252755%2527%2520r%253D%252728%2527%2520stroke%253D%2527white%2527%2520stroke-width%253D%25276%2527%2520fill%253D%2527none%2527%252F%253E%253Cpath%2520d%253D%2527M50%252038%2520v17%2520h12%2527%2520stroke%253D%2527white%2527%2520stroke-width%253D%25276%2527%2520stroke-linecap%253D%2527round%2527%2520fill%253D%2527none%2527%252F%253E%253Crect%2520x%253D%252742%2527%2520y%253D%252718%2527%2520width%253D%252716%2527%2520height%253D%25278%2527%2520rx%253D%25272%2527%2520fill%253D%2527white%2527%252F%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D'>
+
+    <!-- Standalone Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TimeTracker">
 
     <!-- Service Worker Registrierung -->
     <script>
@@ -67,6 +72,73 @@
             margin-right: auto;
             -webkit-tap-highlight-color: transparent;
             transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* Splash Screen Overlay */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #10b981;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3rem 1.5rem;
+            z-index: 9999;
+            cursor: pointer;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        #splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .splash-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            text-align: center;
+        }
+
+        .splash-icon {
+            width: 90px;
+            height: 90px;
+            margin-bottom: 1.2rem;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+        }
+
+        .splash-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.02em;
+        }
+
+        .splash-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin: 0;
+            animation: pulse 1.8s infinite;
+        }
+
+        .splash-credits {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
         }
 
         .header-container {
@@ -255,6 +327,23 @@
 </head>
 <body>
 
+    <!-- Interaktiver Splash Screen -->
+    <div id="splash-screen" onclick="dismissSplash()">
+        <div class="splash-content">
+            <svg class="splash-icon" viewBox="0 0 100 100">
+                <rect width="100" height="100" rx="20" fill="white" fill-opacity="0.2"/>
+                <circle cx="50" cy="55" r="28" stroke="white" stroke-width="6" fill="none"/>
+                <path d="M50 38 v17 h12" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
+                <rect x="42" y="18" width="16" height="8" rx="2" fill="white"/>
+            </svg>
+            <h1 class="splash-title">Work Time Tracker</h1>
+            <p class="splash-subtitle">Tippe auf den Bildschirm zum Starten</p>
+        </div>
+        <div class="splash-credits">
+            Entwickelt von <strong>Holger</strong> & <strong>Gemini</strong>
+        </div>
+    </div>
+
     <div class="header-container">
         <h1>Work Time Tracker</h1>
         <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
@@ -304,6 +393,13 @@
     <script>
         let logs = JSON.parse(localStorage.getItem('trip_time_logs')) || [];
 
+        function dismissSplash() {
+            const splash = document.getElementById('splash-screen');
+            if (splash) {
+                splash.classList.add('hidden');
+            }
+        }
+
         // Theme Handling
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
@@ -326,7 +422,6 @@
 
         initTheme();
 
-        // Lokales Datum im Format YYYY-MM-DD abrufen
         function getLocalDateString(d = new Date()) {
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -340,7 +435,7 @@
             logs.sort((a, b) => {
                 const dtA = new Date(`${a.date}T${a.time}`);
                 const dtB = new Date(`${b.date}T${b.time}`);
-                return dtB - dtA; // Neueste Einträge oben
+                return dtB - dtA;
             });
         }
 
@@ -413,7 +508,7 @@
             const sortedLogs = [...logs].sort((a, b) => {
                 const dtA = new Date(`${a.date}T${a.time}`);
                 const dtB = new Date(`${b.date}T${b.time}`);
-                return dtA - dtB; // Chronologisch aufsteigend für Zeitberechnung
+                return dtA - dtB;
             });
 
             let totals = { Active: 0, Passive: 0, Break: 0 };
@@ -429,7 +524,6 @@
                     const diffMs = t2 - t1;
                     if (diffMs > 0) {
                         const hoursDecimal = diffMs / (1000 * 60 * 60);
-                        // Status 'End' zählt keine weiteren Stunden
                         if (totals.hasOwnProperty(current.status) && current.status !== 'End') {
                             totals[current.status] += hoursDecimal;
                         }
@@ -455,97 +549,4 @@
                     <div class="log-row-main">
                         <input type="date" value="${log.date}" onchange="updateLog(${log.id}, 'date', this.value)">
                         <input type="time" value="${log.time}" onchange="updateLog(${log.id}, 'time', this.value)">
-                        <span class="badge" style="background:${getStatusColor(log.status)}">${log.status}</span>
-                        <button class="delete-btn" onclick="deleteLog(${log.id})">✕</button>
-                    </div>
-                    <div class="log-row-note">
-                        <input type="text" placeholder="Note (optional)" value="${log.note || ''}" onchange="updateLog(${log.id}, 'note', this.value)">
-                    </div>
-                `;
-                logList.appendChild(item);
-            });
-
-            const selectedDate = document.getElementById('summary-date').value;
-            const totals = calculateDailySummary(selectedDate);
-
-            document.getElementById('sum-active').textContent = totals.Active.toFixed(2) + ' h';
-            document.getElementById('sum-passive').textContent = totals.Passive.toFixed(2) + ' h';
-            document.getElementById('sum-break').textContent = totals.Break.toFixed(2) + ' h';
-            
-            const totalWork = totals.Active + totals.Passive;
-            document.getElementById('sum-total').textContent = totalWork.toFixed(2) + ' h';
-        }
-
-        function exportNativeXlsx() {
-            if (logs.length === 0) {
-                alert("No logs to export.");
-                return;
-            }
-
-            const grouped = {};
-            logs.forEach(l => {
-                if (!grouped[l.date]) grouped[l.date] = [];
-                grouped[l.date].push(l);
-            });
-
-            const dates = Object.keys(grouped).sort();
-
-            dates.forEach(d => {
-                grouped[d].sort((a, b) => a.time.localeCompare(b.time));
-            });
-
-            let maxRows = 0;
-            dates.forEach(d => {
-                if (grouped[d].length > maxRows) maxRows = grouped[d].length;
-            });
-
-            const sheetData = [];
-
-            sheetData.push(dates);
-
-            for (let i = 0; i < maxRows; i++) {
-                const row = [];
-                dates.forEach(d => {
-                    const entry = grouped[d][i];
-                    if (entry) {
-                        const abbr = getStatusAbbreviation(entry.status);
-                        const noteStr = entry.note ? ` (${entry.note})` : '';
-                        row.push(`${abbr} ${entry.time}${noteStr}`);
-                    } else {
-                        row.push('');
-                    }
-                });
-                sheetData.push(row);
-            }
-
-            sheetData.push(dates.map(() => ''));
-
-            const activeRow = [];
-            const passiveRow = [];
-            const breakRow = [];
-            const totalRow = [];
-
-            dates.forEach(d => {
-                const totals = calculateDailySummary(d);
-                activeRow.push(`Active: ${totals.Active.toFixed(2)}h`);
-                passiveRow.push(`Passive: ${totals.Passive.toFixed(2)}h`);
-                breakRow.push(`Break: ${totals.Break.toFixed(2)}h`);
-                totalRow.push(`Total: ${(totals.Active + totals.Passive).toFixed(2)}h`);
-            });
-
-            sheetData.push(activeRow);
-            sheetData.push(passiveRow);
-            sheetData.push(breakRow);
-            sheetData.push(totalRow);
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(sheetData);
-            XLSX.utils.book_append_sheet(wb, ws, "Work Logs");
-
-            XLSX.writeFile(wb, `work_matrix_${getLocalDateString()}.xlsx`);
-        }
-
-        render();
-    </script>
-</body>
-</html>
+        
