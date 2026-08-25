@@ -1003,9 +1003,11 @@ Type:
         }
 
 
-        resetDateInputsToToday();
-        populatePaymentSelects();
-        saveAndRender();
+        document.addEventListener('DOMContentLoaded', () => {
+            resetDateInputsToToday();
+            populatePaymentSelects();
+            saveAndRender();
+        });
     </script>
 </body>
 </html>
