@@ -23,4 +23,4 @@ A lightweight, privacy-focused work and travel time tracker built as a single-pa
 * [SheetJS (xlsx)](https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js) – Used for client-side Excel generation.
 
 ---
-Developed by Luipolt & Gemini
+Developed by Luipolt
