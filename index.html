@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light" data-btn="tint">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Work &amp; Expense Tracker</title>
-<meta name="theme-color" content="#F8F6F0">
+<meta name="theme-color" content="#F2F5F2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Tracker">
@@ -18,51 +18,32 @@
 
 <style>
 :root {
-  /* Farbwelt */
-  --canvas: #F8F6F0;
-  --charcoal: #1E1E1E;
-  --sage: #4A7C59;
-  --terracotta: #B85B48;
-  --taupe: #8C7A6B;
-  --cashmere: #EBE5DF;
-  --ochre: #D4A359;
-  --plum: #6E4569;
+  /* Standardwerte (Sage Mist, hell). Das Theme-System in JS überschreibt sie. */
+  --bg: #F2F5F2;
+  --card-bg: #E6ECE7;
+  --text: #25302A;
+  --subtext: #66756B;
+  --border: #D5DED7;
+  --accent: #5B7F6B;
+  --on-accent: #F8F6F0;
+  --c-active: #5B7F6B;  --on-active: #F8F6F0;
+  --c-passive: #6F86A3; --on-passive: #1E1E1E;
+  --c-break: #C9A25F;   --on-break: #1E1E1E;
+  --c-end: #8C958E;     --on-end: #1E1E1E;
+  --r: .5rem;
+  --r-sm: .375rem;
 
-  --bg: var(--canvas);
-  --card-bg: var(--cashmere);
-  --text: var(--charcoal);
-  --subtext: #6F6054;
-  --border: #D8CFC5;
-  --input-bg: var(--canvas);
-
-  --c-active: var(--sage);
-  --c-passive: var(--plum);
-  --c-break: var(--ochre);
-  --c-end: var(--taupe);
-
-  /* Textfarben der Status (in Dark Mode aufgehellt) */
-  --t-active: #3F6B4D;
-  --t-passive: #6E4569;
-  --t-break: #8A5F17;
+  --input-bg: var(--bg);
+  /* lesbare Textvarianten der Statusfarben, passend zum Modus */
+  --t-active: color-mix(in srgb, var(--c-active) 70%, var(--text));
+  --t-passive: color-mix(in srgb, var(--c-passive) 70%, var(--text));
+  --t-break: color-mix(in srgb, var(--c-break) 70%, var(--text));
+  --t-end: color-mix(in srgb, var(--c-end) 70%, var(--text));
   --t-warn: #B85B48;
 }
-
-[data-theme="dark"] {
-  --bg: var(--charcoal);
-  --card-bg: #2A2826;
-  --text: var(--canvas);
-  --subtext: #B5A798;
-  --border: #403B36;
-  --input-bg: #1E1E1E;
-
-  --t-active: #8DBE9B;
-  --t-passive: #C39BBC;
-  --t-break: #D4A359;
-  --t-warn: #E08A77;
-}
+html[data-theme="dark"] { --t-warn: #E08A77; }
 
 * { box-sizing: border-box; }
-
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -88,16 +69,16 @@ h2 { font-size: 1rem; margin: 0 0 .6rem; }
   display: inline-flex; align-items: center; justify-content: center;
   width: 2.4rem; height: 2.4rem;
   background: var(--card-bg); color: var(--text);
-  border: 1px solid var(--border); border-radius: .5rem; cursor: pointer; font-size: 1.1rem;
+  border: 1px solid var(--border); border-radius: var(--r); cursor: pointer; font-size: 1.1rem;
 }
 
-.tab-nav { display: flex; gap: .5rem; margin-bottom: 1rem; }
+.tab-nav { display: flex; gap: .4rem; margin-bottom: 1rem; }
 .tab-btn {
-  flex: 1; padding: .65rem; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);
-  font: inherit; font-weight: 600; font-size: .95rem; border-radius: .5rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: .45rem;
+  flex: 1; padding: .65rem .3rem; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);
+  font: inherit; font-weight: 600; font-size: .9rem; border-radius: var(--r); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: .4rem;
 }
-.tab-btn.active { background: var(--sage); border-color: var(--sage); color: var(--canvas); }
+.tab-btn.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
@@ -105,43 +86,70 @@ h2 { font-size: 1rem; margin: 0 0 .6rem; }
 /* Statusanzeige */
 .now-bar {
   display: flex; align-items: center; gap: .6rem; min-height: 2.6rem;
-  background: var(--card-bg); border: 1px solid var(--border); border-radius: .5rem;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r);
   padding: .55rem .85rem; margin-bottom: .6rem; font-size: .9rem;
 }
-.now-dot { width: .65rem; height: .65rem; border-radius: 50%; background: var(--taupe); flex: none; }
+.now-dot { width: .65rem; height: .65rem; border-radius: 50%; background: var(--c-end); flex: none; }
 .now-bar.running .now-dot { animation: pulse 1.8s ease-in-out infinite; }
-.now-bar.warn { border-color: var(--terracotta); }
+.now-bar.warn { border-color: var(--t-warn); }
 .now-bar .now-sub { color: var(--subtext); margin-left: auto; font-variant-numeric: tabular-nums; }
 @keyframes pulse { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .now-bar.running .now-dot { animation: none; } }
 
+/* ---------- Status-Farben für Buttons und Badges ---------- */
+.st-active  { --sc: var(--c-active);  --sct: var(--t-active);  --scon: var(--on-active); }
+.st-passive { --sc: var(--c-passive); --sct: var(--t-passive); --scon: var(--on-passive); }
+.st-break   { --sc: var(--c-break);   --sct: var(--t-break);   --scon: var(--on-break); }
+.st-end     { --sc: var(--c-end);     --sct: var(--t-end);     --scon: var(--on-end); }
+
 .button-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; margin-bottom: 1rem; }
 .stamp-btn {
-  border: 2px solid transparent; color: var(--canvas); padding: 1rem .2rem; font: inherit; font-size: .9rem; font-weight: 700;
-  border-radius: .5rem; cursor: pointer; transition: transform .05s ease, opacity .1s;
+  border: 1.5px solid transparent; padding: 1rem .2rem; font: inherit; font-size: .9rem; font-weight: 700;
+  border-radius: var(--r); cursor: pointer; transition: transform .05s ease, opacity .1s;
+  background: var(--sc); color: var(--scon);
 }
 .stamp-btn:active { transform: scale(.96); opacity: .9; }
 .stamp-btn.current { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
-.btn-active { background: var(--c-active); }
-.btn-passive { background: var(--c-passive); }
-.btn-break { background: var(--c-break); color: var(--charcoal); }
-.btn-end { background: var(--c-end); }
+
+.badge {
+  display: inline-block; padding: .3rem .45rem; border-radius: var(--r-sm);
+  font-weight: 700; font-size: .7rem; text-align: center; min-width: 3.6rem; flex: none;
+  border: 1.5px solid transparent;
+  background: var(--sc); color: var(--scon);
+}
+
+/* Stil: getönt */
+html[data-btn="tint"] .stamp-btn { background: color-mix(in srgb, var(--sc) 20%, var(--bg)); color: var(--text); }
+html[data-btn="tint"] .stamp-btn.current { background: var(--sc); color: var(--scon); box-shadow: none; }
+html[data-btn="tint"] .badge { background: color-mix(in srgb, var(--sc) 24%, var(--card-bg)); color: var(--text); }
+
+/* Stil: minimal */
+html[data-btn="minimal"] .stamp-btn { background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-bottom: 4px solid var(--sc); }
+html[data-btn="minimal"] .stamp-btn.current { box-shadow: inset 0 0 0 1.5px var(--text); }
+html[data-btn="minimal"] .badge { background: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-left: 4px solid var(--sc); }
+
+/* Stil: nur Rahmen und Schrift */
+html[data-btn="outline"] .stamp-btn { background: transparent; color: var(--sct); border: 1.5px solid var(--sct); }
+html[data-btn="outline"] .stamp-btn.current { background: color-mix(in srgb, var(--sc) 18%, transparent); box-shadow: inset 0 0 0 1px var(--sct); }
+html[data-btn="outline"] .badge { background: transparent; color: var(--sct); border: 1.5px solid var(--sct); }
 
 .summary-card, .logs-card, .form-card {
-  background: var(--card-bg); border: 1px solid var(--border); border-radius: .5rem;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--r);
   padding: .85rem; margin-bottom: 1rem; width: 100%;
 }
 .summary-header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .summary-header input[type="date"] { width: auto; }
 .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; text-align: center; margin-top: .75rem; }
-.summary-box { padding: .45rem .2rem; border-radius: .375rem; background: var(--bg); border: 1px solid var(--border); }
+.summary-box { padding: .45rem .2rem; border-radius: var(--r-sm); background: var(--bg); border: 1px solid var(--border); }
 .summary-box small { display: block; font-size: .65rem; color: var(--subtext); font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
 .summary-box span { font-size: .9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .hint { font-size: .72rem; color: var(--subtext); margin: .6rem 0 0; }
 
 .log-item { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; padding: .65rem 0; border-bottom: 1px solid var(--border); }
 .log-item:last-child { border-bottom: none; }
-.log-row-main { display: flex; align-items: center; gap: .4rem; flex: 1 1 100%; }
+.log-row-main { display: flex; align-items: center; gap: .3rem; flex: 1 1 100%; min-width: 0; }
+.log-row-main input[type="date"], .log-row-main input[type="time"], .log-row-main input[type="number"] { padding-left: .35rem; padding-right: .3rem; }
+.log-row-main input::-webkit-calendar-picker-indicator { margin-left: 0; padding: 0; }
 .log-row-note { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: .4rem; }
 .log-row-note > * { flex: 1 1 40%; min-width: 0; }
 .log-row-note > .wide { flex: 1 1 100%; }
@@ -153,62 +161,81 @@ h2 { font-size: 1rem; margin: 0 0 .6rem; }
 input[type="time"], input[type="date"], input[type="text"], input[type="number"], select {
   font-family: inherit; font-size: 16px; /* 16px verhindert Zoom beim Fokussieren auf iOS */
   padding: .45rem .5rem; min-width: 0; width: 100%;
-  border: 1px solid var(--border); border-radius: .375rem;
-  background: var(--input-bg); color: var(--text); color-scheme: light dark;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--input-bg); color: var(--text);
 }
-[data-theme="light"] input, [data-theme="light"] select { color-scheme: light; }
-[data-theme="dark"] input, [data-theme="dark"] select { color-scheme: dark; }
-input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
+html[data-theme="light"] input, html[data-theme="light"] select { color-scheme: light; }
+html[data-theme="dark"] input, html[data-theme="dark"] select { color-scheme: dark; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .log-row-main input[type="date"] { flex: 1.5 1 0; }
 .log-row-main input[type="time"] { flex: 1 1 0; }
 .log-row-main input[type="number"] { flex: 1 1 0; }
 
-.badge {
-  display: inline-block; padding: .3rem .45rem; border-radius: .3rem; color: var(--canvas);
-  font-weight: 700; font-size: .72rem; text-align: center; min-width: 4.2rem; flex: none;
-}
-.badge.on-ochre { color: var(--charcoal); }
-
 .delete-btn {
   display: inline-flex; align-items: center; justify-content: center; flex: none;
-  width: 2rem; height: 2rem; background: none; border: none; color: var(--t-warn); cursor: pointer; border-radius: .375rem;
+  width: 1.8rem; height: 2rem; background: none; border: none; color: var(--t-warn); cursor: pointer; border-radius: var(--r-sm);
 }
 
 .seg { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .6rem; }
 .seg[hidden] { display: none; }
 .seg-label { font-size: .85rem; font-weight: 600; }
-.seg-opts { display: inline-flex; border: 1px solid var(--border); border-radius: .5rem; overflow: hidden; }
+.seg-opts { display: inline-flex; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.seg-opts.block { display: flex; width: 100%; }
+.seg-opts.block label { flex: 1; }
+.seg-opts.block span { padding: .5rem .2rem; text-align: center; }
 .seg-opts label { cursor: pointer; }
 .seg-opts input { position: absolute; opacity: 0; pointer-events: none; }
 .seg-opts span { display: block; padding: .45rem 1.1rem; font-size: .85rem; font-weight: 600; background: var(--input-bg); color: var(--text); }
-.seg-opts input:checked + span { background: var(--sage); color: var(--canvas); }
-.seg-opts input:focus-visible + span { outline: 2px solid var(--sage); outline-offset: -2px; }
+.seg-opts input:checked + span { background: var(--accent); color: var(--on-accent); }
+.seg-opts input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .submit-btn {
-  background: var(--plum); color: var(--canvas); border: none; padding: .7rem; border-radius: .5rem;
+  background: var(--accent); color: var(--on-accent); border: none; padding: .7rem; border-radius: var(--r);
   font: inherit; font-weight: 700; cursor: pointer; width: 100%;
 }
 
 .actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; margin-bottom: 1rem; }
 .action-btn {
   padding: .65rem .4rem; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);
-  border-radius: .5rem; font: inherit; font-weight: 600; font-size: .85rem; cursor: pointer; text-align: center;
+  border-radius: var(--r); font: inherit; font-weight: 600; font-size: .85rem; cursor: pointer; text-align: center;
 }
-.action-btn.primary { background: var(--sage); border-color: var(--sage); color: var(--canvas); }
-.action-btn.danger { color: var(--t-warn); border-color: var(--terracotta); }
+.action-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.action-btn.danger { color: var(--t-warn); border-color: var(--t-warn); }
 
 .credits { text-align: center; font-size: .75rem; color: var(--subtext); margin-top: 1.5rem; }
+
+/* ---------- Look-Tab ---------- */
+.setting-title { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--subtext); margin: 1rem 0 .5rem; }
+.setting-title:first-of-type { margin-top: 0; }
+.preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.preset {
+  text-align: left; padding: .6rem; background: var(--bg); color: var(--text); font: inherit;
+  border: 1.5px solid var(--border); border-radius: var(--r); cursor: pointer;
+}
+.preset.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.preset b { display: block; font-size: .85rem; margin-bottom: .4rem; }
+.chips { display: flex; gap: .2rem; }
+.chips i { width: 1rem; height: 1rem; border-radius: .25rem; border: 1px solid rgba(128,128,128,.35); display: block; }
+.preview { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r); padding: .7rem; margin: .8rem 0; }
+.preview .button-grid { margin-bottom: .6rem; }
+.preview-row { display: flex; flex-wrap: wrap; gap: .4rem; }
+.color-row { display: flex; align-items: center; gap: .7rem; padding: .35rem 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
+.color-row:last-child { border-bottom: none; }
+.color-row span { flex: 1; }
+.color-row code { font-size: .8rem; color: var(--subtext); width: 4.6rem; }
+.color-row input[type="color"] { width: 2.6rem; height: 2rem; padding: 0; border: 1px solid var(--border); border-radius: var(--r-sm); background: none; cursor: pointer; }
+.note { font-size: .78rem; color: var(--subtext); margin: .2rem 0 .6rem; }
 
 .toast {
   position: fixed; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom)); transform: translateX(-50%);
   display: flex; align-items: center; gap: 1rem; z-index: 50;
-  background: var(--charcoal); color: var(--canvas); border: 1px solid var(--taupe);
-  padding: .65rem .9rem; border-radius: .5rem; font-size: .9rem; max-width: calc(100% - 1.5rem);
+  background: #1E1E1E; color: #F8F6F0; border: 1px solid #8C7A6B;
+  padding: .65rem .9rem; border-radius: var(--r); font-size: .9rem; max-width: calc(100% - 1.5rem);
 }
-[data-theme="dark"] .toast { background: var(--canvas); color: var(--charcoal); }
+html[data-theme="dark"] .toast { background: #F8F6F0; color: #1E1E1E; }
 .toast[hidden] { display: none; }
-.toast button { background: none; border: none; color: var(--ochre); font: inherit; font-weight: 700; cursor: pointer; padding: 0; }
-[data-theme="dark"] .toast button { color: var(--terracotta); }
+.toast button { background: none; border: none; color: #D4A359; font: inherit; font-weight: 700; cursor: pointer; padding: 0; }
+html[data-theme="dark"] .toast button { color: #B85B48; }
 </style>
 </head>
 <body>
@@ -219,7 +246,7 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
     <button class="icon-btn" data-action="refresh" title="Refresh app" aria-label="Refresh app">
       <svg class="ic" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
     </button>
-    <button class="icon-btn" data-action="theme" id="theme-btn" title="Toggle dark mode" aria-label="Toggle dark mode"></button>
+    <button class="icon-btn" data-action="theme" id="theme-btn" title="Toggle light/dark" aria-label="Toggle light or dark"></button>
   </div>
 </div>
 
@@ -230,17 +257,20 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
   <button class="tab-btn" role="tab" aria-selected="false" data-action="tab" data-tab="expense">
     <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg> Expenses
   </button>
+  <button class="tab-btn" role="tab" aria-selected="false" data-action="tab" data-tab="look">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg> Look
+  </button>
 </div>
 
 <!-- TAB 1: TIME -->
 <div id="tab-time" class="tab-content active">
   <div class="now-bar" id="now-bar"><span class="now-dot"></span><span id="now-text">No active timer</span><span class="now-sub" id="now-sub"></span></div>
 
-  <div class="button-grid">
-    <button class="stamp-btn btn-active" data-action="stamp" data-status="Active">Active</button>
-    <button class="stamp-btn btn-passive" data-action="stamp" data-status="Passive">Passive</button>
-    <button class="stamp-btn btn-break" data-action="stamp" data-status="Break">Break</button>
-    <button class="stamp-btn btn-end" data-action="stamp" data-status="End">End</button>
+  <div class="button-grid" id="stamp-grid">
+    <button class="stamp-btn st-active btn-active" data-action="stamp" data-status="Active">Active</button>
+    <button class="stamp-btn st-passive btn-passive" data-action="stamp" data-status="Passive">Passive</button>
+    <button class="stamp-btn st-break btn-break" data-action="stamp" data-status="Break">Break</button>
+    <button class="stamp-btn st-end btn-end" data-action="stamp" data-status="End">End</button>
   </div>
 
   <div class="summary-card">
@@ -309,6 +339,59 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
   <div class="logs-card"><div id="expense-list"></div></div>
 </div>
 
+<!-- TAB 3: LOOK -->
+<div id="tab-look" class="tab-content">
+  <div class="form-card">
+    <div class="setting-title">Theme</div>
+    <div class="preset-grid" id="preset-grid"></div>
+    <p class="note" id="custom-note" hidden>You changed some colors. Picking a theme resets them.</p>
+
+    <div class="setting-title">Mode</div>
+    <div class="seg-opts block" id="seg-mode">
+      <label><input type="radio" name="look-mode" value="system"><span>System</span></label>
+      <label><input type="radio" name="look-mode" value="light"><span>Light</span></label>
+      <label><input type="radio" name="look-mode" value="dark"><span>Dark</span></label>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="setting-title">Button style</div>
+    <div class="seg-opts block" id="seg-btn">
+      <label><input type="radio" name="look-btn" value="solid"><span>Solid</span></label>
+      <label><input type="radio" name="look-btn" value="tint"><span>Tinted</span></label>
+      <label><input type="radio" name="look-btn" value="minimal"><span>Minimal</span></label>
+      <label><input type="radio" name="look-btn" value="outline"><span>Outline</span></label>
+    </div>
+
+    <div class="preview" aria-hidden="true">
+      <div class="button-grid">
+        <button class="stamp-btn st-active current" data-action="noop" tabindex="-1">Active</button>
+        <button class="stamp-btn st-passive" data-action="noop" tabindex="-1">Passive</button>
+        <button class="stamp-btn st-break" data-action="noop" tabindex="-1">Break</button>
+        <button class="stamp-btn st-end" data-action="noop" tabindex="-1">End</button>
+      </div>
+      <div class="preview-row">
+        <span class="badge st-active">Active</span><span class="badge st-passive">Passive</span>
+        <span class="badge st-break">Break</span><span class="badge st-end">End</span>
+      </div>
+    </div>
+
+    <div class="setting-title">Corners</div>
+    <div class="seg-opts block" id="seg-radius">
+      <label><input type="radio" name="look-radius" value="sharp"><span>Sharp</span></label>
+      <label><input type="radio" name="look-radius" value="normal"><span>Normal</span></label>
+      <label><input type="radio" name="look-radius" value="round"><span>Round</span></label>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="setting-title">Colors <span id="color-mode-label" style="text-transform:none;letter-spacing:0;font-weight:600"></span></div>
+    <p class="note">Edits apply to the mode you are looking at right now. Switch between light and dark to edit the other one.</p>
+    <div id="color-list"></div>
+    <div style="margin-top:.8rem"><button class="action-btn" style="width:100%" data-action="reset-colors">Reset my colors</button></div>
+  </div>
+</div>
+
 <!-- GLOBAL ACTIONS -->
 <div class="actions">
   <button class="action-btn primary" data-action="export-xlsx">Export XLSX</button>
@@ -329,7 +412,8 @@ input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px s
 /* ---------- Konstanten ---------- */
 const KEY_LOGS = 'trip_time_logs';
 const KEY_EXP = 'trip_expense_logs';
-const KEY_THEME = 'theme';
+const KEY_THEME = 'theme';           // alt: 'light' | 'dark' (wird übernommen)
+const KEY_LOOK = 'tracker_look';
 const STATUSES = ['Active', 'Passive', 'Break', 'End'];
 const CATEGORIES = ['Meals', 'Transport', 'Hotel', 'Phone', 'Other'];
 const CATEGORY_LABELS = { Meals: 'Meals', Transport: 'Transport', Hotel: 'Hotel', Phone: 'Phone', Other: 'Other' };
@@ -360,6 +444,182 @@ function newId() { return Date.now() * 1000 + Math.floor(Math.random() * 1000); 
 
 const RE_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const RE_TIME = /^\d{2}:\d{2}$/;
+const RE_HEX = /^#[0-9a-fA-F]{6}$/;
+
+/* =====================================================================
+   LOOK / THEMES
+   ===================================================================== */
+const COLOR_KEYS = [
+  ['bg', 'Background'], ['card', 'Cards'], ['text', 'Text'], ['sub', 'Secondary text'], ['border', 'Borders'],
+  ['accent', 'Accent (tabs, buttons)'], ['active', 'Active'], ['passive', 'Passive'], ['break', 'Break'], ['end', 'End']
+];
+
+const PRESETS = {
+  sage: { name: 'Sage Mist',
+    L: { bg: '#F2F5F2', card: '#E6ECE7', text: '#25302A', sub: '#5D6B62', border: '#D5DED7', accent: '#5B7F6B', active: '#5B7F6B', passive: '#6F86A3', break: '#C9A25F', end: '#8C958E' },
+    D: { bg: '#181D1A', card: '#222924', text: '#DDE6DF', sub: '#93A398', border: '#313B34', accent: '#5B7F6B', active: '#7FA891', passive: '#8FA6C4', break: '#C9A25F', end: '#9AA59D' } },
+  nordic: { name: 'Nordic Slate',
+    L: { bg: '#F4F6F8', card: '#E8ECF0', text: '#20262D', sub: '#5F6A77', border: '#D8DEE5', accent: '#4C6A8A', active: '#4F8A78', passive: '#7773B0', break: '#C9A55E', end: '#7C8896' },
+    D: { bg: '#14181D', card: '#1E242B', text: '#DCE3EA', sub: '#8C9AA8', border: '#2D363F', accent: '#4C6A8A', active: '#6FB09C', passive: '#9591CC', break: '#C9A55E', end: '#98A4B2' } },
+  sand: { name: 'Sand & Terracotta',
+    L: { bg: '#FBF6EF', card: '#F1E7DA', text: '#3A2F28', sub: '#756356', border: '#E6D8C8', accent: '#B5694F', active: '#B5694F', passive: '#8C7A6B', break: '#D4A359', end: '#6F625A' },
+    D: { bg: '#211A16', card: '#2D241F', text: '#EBDFD2', sub: '#AE9B8A', border: '#3F332B', accent: '#B5694F', active: '#D0866C', passive: '#A8967F', break: '#D4A359', end: '#A89887' } },
+  brand: { name: 'Brand (Q-Branch)',
+    L: { bg: '#F8F6F0', card: '#F0EBE3', text: '#2E2A26', sub: '#74675B', border: '#E4DCD2', accent: '#4A7C59', active: '#4A7C59', passive: '#6E4569', break: '#D4A359', end: '#8C7A6B' },
+    D: { bg: '#1F1C19', card: '#2A2622', text: '#E6E0D4', sub: '#A89C8E', border: '#3A342E', accent: '#4A7C59', active: '#6FA382', passive: '#A67BA0', break: '#D4A359', end: '#A89886' } }
+};
+const BTN_STYLES = ['solid', 'tint', 'minimal', 'outline'];
+const MODES = ['system', 'light', 'dark'];
+const RADII = { sharp: ['.2rem', '.15rem'], normal: ['.5rem', '.375rem'], round: ['1rem', '.7rem'] };
+
+const DEFAULT_LOOK = { preset: 'sage', mode: 'system', btn: 'tint', radius: 'normal', custom: { light: {}, dark: {} } };
+
+function sanitizeLook(o) {
+  const l = JSON.parse(JSON.stringify(DEFAULT_LOOK));
+  if (!o || typeof o !== 'object') return l;
+  if (PRESETS[o.preset]) l.preset = o.preset;
+  if (MODES.includes(o.mode)) l.mode = o.mode;
+  if (BTN_STYLES.includes(o.btn)) l.btn = o.btn;
+  if (RADII[o.radius]) l.radius = o.radius;
+  ['light', 'dark'].forEach(m => {
+    const src = o.custom && o.custom[m];
+    if (!src || typeof src !== 'object') return;
+    COLOR_KEYS.forEach(([k]) => { if (typeof src[k] === 'string' && RE_HEX.test(src[k])) l.custom[m][k] = src[k].toUpperCase(); });
+  });
+  return l;
+}
+
+function loadLook() {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(KEY_LOOK)); } catch (e) {}
+  const l = sanitizeLook(raw);
+  if (!raw) { // Altbestand: nur der frühere Hell/Dunkel-Schalter
+    let legacy = null;
+    try { legacy = localStorage.getItem(KEY_THEME); } catch (e) {}
+    if (legacy === 'light' || legacy === 'dark') l.mode = legacy;
+  }
+  return l;
+}
+
+let look = loadLook();
+let lookTimer = null;
+function saveLook(now) {
+  clearTimeout(lookTimer);
+  const write = () => { try { localStorage.setItem(KEY_LOOK, JSON.stringify(look)); } catch (e) {} };
+  if (now) write(); else lookTimer = setTimeout(write, 250);
+}
+
+function systemTheme() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function resolvedMode() { return look.mode === 'system' ? systemTheme() : look.mode; }
+function palette(mode) {
+  return Object.assign({}, PRESETS[look.preset][mode === 'dark' ? 'D' : 'L'], look.custom[mode] || {});
+}
+
+// Kontrast für automatisch gewählte Textfarbe auf Vollfarben
+function lum(hex) {
+  const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+function contrast(a, b) {
+  const x = lum(a), y = lum(b);
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+}
+function onColor(hex) {
+  const dark = '#1E1E1E', light = '#F8F6F0';
+  return contrast(hex, dark) >= contrast(hex, light) ? dark : light;
+}
+function mixHex(a, b, t) {
+  const A = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16));
+  const B = [1, 3, 5].map(i => parseInt(b.slice(i, i + 2), 16));
+  return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+// Zieht eine Farbe schrittweise Richtung `toward`, bis sie auf allen Hintergründen gut lesbar ist.
+function ensureContrast(color, bgs, min, toward) {
+  for (let t = 0; t <= 1.0001; t += 0.04) {
+    const c = mixHex(color, toward, Math.min(t, 1));
+    if (bgs.every(b => contrast(c, b) >= min)) return c;
+  }
+  return toward;
+}
+
+function applyLook() {
+  const mode = resolvedMode();
+  const p = palette(mode);
+  const root = document.documentElement;
+  root.setAttribute('data-theme', mode);
+  root.setAttribute('data-btn', look.btn);
+  const set = (k, v) => root.style.setProperty(k, v);
+  set('--bg', p.bg); set('--card-bg', p.card); set('--text', p.text); set('--subtext', p.sub); set('--border', p.border);
+  set('--accent', p.accent); set('--on-accent', onColor(p.accent));
+  const surfaces = [p.bg, p.card];
+  ['active', 'passive', 'break', 'end'].forEach(key => {
+    set('--c-' + key, p[key]); set('--on-' + key, onColor(p[key]));
+    // lesbare Textvariante der Statusfarbe (Outline-Buttons, Summen, Badges)
+    set('--t-' + key, ensureContrast(p[key], surfaces, 4.5, p.text));
+  });
+  set('--t-warn', ensureContrast(mode === 'dark' ? '#E08A77' : '#B85B48', surfaces, 4.5, p.text));
+  const r = RADII[look.radius];
+  set('--r', r[0]); set('--r-sm', r[1]);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', p.bg);
+  $('theme-btn').innerHTML = mode === 'dark' ? ICON_SUN : ICON_MOON;
+}
+
+function hasCustom() {
+  return ['light', 'dark'].some(m => Object.keys(look.custom[m]).length);
+}
+
+function renderPresets() {
+  const mode = resolvedMode();
+  $('preset-grid').innerHTML = Object.keys(PRESETS).map(id => {
+    const p = PRESETS[id][mode === 'dark' ? 'D' : 'L'];
+    const chips = [p.bg, p.card, p.accent, p.active, p.passive, p.break, p.end].map(c => `<i style="background:${c}"></i>`).join('');
+    return `<button class="preset${look.preset === id ? ' selected' : ''}" data-action="preset" data-preset="${id}"><b>${esc(PRESETS[id].name)}</b><span class="chips">${chips}</span></button>`;
+  }).join('');
+}
+
+function renderColorList() {
+  $('color-list').innerHTML = COLOR_KEYS.map(([k, label]) =>
+    `<label class="color-row"><span>${esc(label)}</span><code data-hex="${k}"></code><input type="color" data-color="${k}" aria-label="${esc(label)}"></label>`
+  ).join('');
+}
+
+function syncLookUI(skipColorKey) {
+  const mode = resolvedMode();
+  const p = palette(mode);
+  document.querySelectorAll('input[name="look-mode"]').forEach(i => { i.checked = i.value === look.mode; });
+  document.querySelectorAll('input[name="look-btn"]').forEach(i => { i.checked = i.value === look.btn; });
+  document.querySelectorAll('input[name="look-radius"]').forEach(i => { i.checked = i.value === look.radius; });
+  document.querySelectorAll('[data-color]').forEach(i => {
+    const k = i.dataset.color;
+    if (k !== skipColorKey) i.value = p[k].toLowerCase();
+    const code = document.querySelector(`[data-hex="${k}"]`);
+    if (code) code.textContent = p[k].toUpperCase();
+  });
+  $('color-mode-label').textContent = `(editing ${mode})`;
+  $('custom-note').hidden = !hasCustom();
+  renderPresets();
+}
+
+function setPreset(id) {
+  if (!PRESETS[id]) return;
+  look.preset = id;
+  look.custom = { light: {}, dark: {} };
+  saveLook(true); applyLook(); syncLookUI();
+}
+
+function resetColors() {
+  look.custom = { light: {}, dark: {} };
+  saveLook(true); applyLook(); syncLookUI();
+}
+
+function toggleLightDark() {
+  look.mode = resolvedMode() === 'dark' ? 'light' : 'dark';
+  saveLook(true); applyLook(); syncLookUI();
+}
 
 /* ---------- Daten laden / bereinigen ---------- */
 function sanitizeLogs(arr) {
@@ -424,34 +684,6 @@ function saveAndRender() {
   renderAll();
 }
 
-/* ---------- Theme ---------- */
-function applyTheme(mode) {
-  document.documentElement.setAttribute('data-theme', mode);
-  $('theme-btn').innerHTML = mode === 'dark' ? ICON_SUN : ICON_MOON;
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', mode === 'dark' ? '#1E1E1E' : '#F8F6F0');
-}
-function systemTheme() {
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-function initTheme() {
-  let saved = null;
-  try { saved = localStorage.getItem(KEY_THEME); } catch (e) {}
-  applyTheme(saved === 'dark' || saved === 'light' ? saved : systemTheme());
-  if (window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      let s = null;
-      try { s = localStorage.getItem(KEY_THEME); } catch (e) {}
-      if (!s) applyTheme(systemTheme());
-    });
-  }
-}
-function toggleTheme() {
-  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  try { localStorage.setItem(KEY_THEME, next); } catch (e) {}
-  applyTheme(next);
-}
-
 /* ---------- Tabs ---------- */
 function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => {
@@ -459,8 +691,7 @@ function switchTab(name) {
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', on ? 'true' : 'false');
   });
-  $('tab-time').classList.toggle('active', name === 'time');
-  $('tab-expense').classList.toggle('active', name === 'expense');
+  ['time', 'expense', 'look'].forEach(t => $('tab-' + t).classList.toggle('active', t === name));
 }
 
 /* ---------- Toast / Undo ---------- */
@@ -500,7 +731,7 @@ function deleteLog(id) {
 }
 
 function statusColor(status) {
-  return { Active: 'var(--c-active)', Passive: 'var(--c-passive)', Break: 'var(--c-break)', End: 'var(--c-end)' }[status] || 'var(--taupe)';
+  return { Active: 'var(--c-active)', Passive: 'var(--c-passive)', Break: 'var(--c-break)', End: 'var(--c-end)' }[status] || 'var(--c-end)';
 }
 
 // Stunden pro Status für einen Tag. Der jeweils letzte Eintrag läuft bis jetzt, wenn er von heute ist.
@@ -523,24 +754,25 @@ function calculateDailySummary(selectedDate, now = new Date()) {
 
 function renderCurrent() {
   const bar = $('now-bar');
+  const dot = bar.querySelector('.now-dot');
   const last = logs[0]; // neueste zuerst
   const now = new Date();
   const today = localDate(now);
   bar.classList.remove('running', 'warn');
-  document.querySelectorAll('.stamp-btn').forEach(b => b.classList.remove('current'));
+  document.querySelectorAll('#stamp-grid .stamp-btn').forEach(b => b.classList.remove('current'));
   $('now-sub').textContent = '';
 
   if (!last) {
     $('now-text').textContent = 'No active timer';
-    bar.querySelector('.now-dot').style.background = 'var(--taupe)';
+    dot.style.background = 'var(--c-end)';
     return;
   }
   if (last.status === 'End') {
     $('now-text').textContent = last.date === today ? `Day ended at ${last.time}` : 'No active timer';
-    bar.querySelector('.now-dot').style.background = 'var(--taupe)';
+    dot.style.background = 'var(--c-end)';
     return;
   }
-  bar.querySelector('.now-dot').style.background = statusColor(last.status);
+  dot.style.background = statusColor(last.status);
   if (last.date !== today) {
     bar.classList.add('warn');
     $('now-text').textContent = `Open ${last.status} entry from ${last.date} – add End`;
@@ -550,7 +782,7 @@ function renderCurrent() {
   const hours = Math.max(0, (now.getTime() - toMs(last.date, last.time)) / 3600000);
   $('now-text').textContent = `${last.status} since ${last.time}`;
   $('now-sub').textContent = fmtH(hours);
-  const btn = document.querySelector(`.stamp-btn[data-status="${last.status}"]`);
+  const btn = document.querySelector(`#stamp-grid .stamp-btn[data-status="${last.status}"]`);
   if (btn) btn.classList.add('current');
 }
 
@@ -571,7 +803,7 @@ function renderLogList() {
       <div class="log-row-main">
         <input type="date" data-field="date" value="${esc(l.date)}" aria-label="Date">
         <input type="time" data-field="time" value="${esc(l.time)}" aria-label="Time">
-        <span class="badge${l.status === 'Break' ? ' on-ochre' : ''}" style="background:${statusColor(l.status)}">${esc(l.status)}</span>
+        <span class="badge st-${l.status.toLowerCase()}">${esc(l.status)}</span>
         <button class="delete-btn" data-action="delete-log" aria-label="Delete entry">${ICON_X}</button>
       </div>
       <div class="log-row-note">
@@ -648,9 +880,9 @@ function expenseTotals() {
 }
 
 function expenseBadge(e) {
-  if (e.payment === 'Corporate Card') return '<span class="badge" style="background:var(--plum)">Corp</span>';
-  if (e.forward) return '<span class="badge" style="background:var(--sage)">Reimburse</span>';
-  return '<span class="badge" style="background:var(--taupe)">Private</span>';
+  if (e.payment === 'Corporate Card') return '<span class="badge st-passive">Corp</span>';
+  if (e.forward) return '<span class="badge st-active">Reimburse</span>';
+  return '<span class="badge st-end">Private</span>';
 }
 
 function renderExpenses() {
@@ -706,7 +938,7 @@ function clearAllData() {
 
 function exportJsonBackup() {
   if (!logs.length && !expenses.length) { alert('No data to export.'); return; }
-  const json = JSON.stringify({ version: 2, logs, expenses }, null, 2);
+  const json = JSON.stringify({ version: 3, logs, expenses, look }, null, 2);
   const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
   const a = document.createElement('a');
   a.href = url;
@@ -727,12 +959,15 @@ function importJsonBackup(event) {
     try { imported = JSON.parse(e.target.result); } catch (err) { alert('Error parsing JSON file.'); return; }
     const newLogs = sanitizeLogs(Array.isArray(imported) ? imported : imported && imported.logs);
     const newExp = Array.isArray(imported) ? null : sanitizeExpenses(imported && imported.expenses);
-    if (!newLogs.length && !(newExp && newExp.length)) { alert('No valid entries found in this file.'); return; }
+    const newLook = !Array.isArray(imported) && imported && imported.look ? sanitizeLook(imported.look) : null;
+    if (!newLogs.length && !(newExp && newExp.length) && !newLook) { alert('No valid entries found in this file.'); return; }
     const msg = `Overwrite current data with this backup?\n${newLogs.length} time entries` +
-      (newExp ? `, ${newExp.length} expenses` : ' (expenses stay unchanged)');
+      (newExp ? `, ${newExp.length} expenses` : ' (expenses stay unchanged)') +
+      (newLook ? ', look settings' : '');
     if (!confirm(msg)) return;
     logs = newLogs;
     if (newExp) expenses = newExp;
+    if (newLook) { look = newLook; saveLook(true); applyLook(); syncLookUI(); }
     saveAndRender();
     showToast('Backup restored');
   };
@@ -832,7 +1067,7 @@ document.addEventListener('click', ev => {
   switch (el.dataset.action) {
     case 'tab': switchTab(el.dataset.tab); break;
     case 'refresh': forceRefresh(); break;
-    case 'theme': toggleTheme(); break;
+    case 'theme': toggleLightDark(); break;
     case 'stamp': addTimestamp(el.dataset.status); break;
     case 'delete-log': deleteLog(id); break;
     case 'add-expense': addExpense(); break;
@@ -841,6 +1076,9 @@ document.addEventListener('click', ev => {
     case 'export-json': exportJsonBackup(); break;
     case 'import-json': $('import-file').click(); break;
     case 'clear': clearAllData(); break;
+    case 'preset': setPreset(el.dataset.preset); break;
+    case 'reset-colors': resetColors(); break;
+    default: break; // z. B. 'noop' (Vorschau)
   }
 });
 
@@ -854,6 +1092,23 @@ $('expense-list').addEventListener('change', ev => {
   const item = ev.target.closest('[data-id]');
   if (input && item) updateExpense(Number(item.dataset.id), input.dataset.field, input.value);
 });
+
+$('tab-look').addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.name === 'look-mode' && MODES.includes(t.value)) look.mode = t.value;
+  else if (t.name === 'look-btn' && BTN_STYLES.includes(t.value)) look.btn = t.value;
+  else if (t.name === 'look-radius' && RADII[t.value]) look.radius = t.value;
+  else return;
+  saveLook(true); applyLook(); syncLookUI();
+});
+$('tab-look').addEventListener('input', ev => {
+  const t = ev.target;
+  if (!t.dataset || !t.dataset.color || !RE_HEX.test(t.value)) return;
+  const mode = resolvedMode();
+  look.custom[mode][t.dataset.color] = t.value.toUpperCase();
+  saveLook(false); applyLook(); syncLookUI(t.dataset.color);
+});
+
 $('exp-payment').addEventListener('change', syncForwardRow);
 $('summary-date').addEventListener('change', renderSummary);
 $('import-file').addEventListener('change', importJsonBackup);
@@ -863,8 +1118,16 @@ $('toast-undo').addEventListener('click', () => {
   $('toast').hidden = true;
 });
 
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (look.mode === 'system') { applyLook(); syncLookUI(); }
+  });
+}
+
 /* ---------- Start ---------- */
-initTheme();
+renderColorList();
+applyLook();
+syncLookUI();
 $('summary-date').value = localDate();
 $('exp-date').value = localDate();
 syncForwardRow();
