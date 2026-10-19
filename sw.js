@@ -1,9 +1,10 @@
 // Service Worker: Network-first, Cache als Fallback. Kein manuelles Hochzählen nötig:
 // online kommt immer die neueste Version, offline die zuletzt geladene.
-const CACHE = 'tracker-v1';
+const CACHE = 'chronicler-v2';
 const PRECACHE = [
   './', './index.html', './manifest.json',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
+  './fonts/Inter-Regular.woff', './fonts/Inter-SemiBold.woff', './fonts/Inter-Bold.woff', './fonts/Lora-SemiBold.woff',
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
 ];
 

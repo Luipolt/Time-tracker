@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Work &amp; Expense Tracker</title>
+<title>Chronicler</title>
 <meta name="theme-color" content="#F2F5F2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Tracker">
+<meta name="apple-mobile-web-app-title" content="Chronicler">
 
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -17,6 +17,12 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
+/* Schriften liegen lokal im Ordner fonts/ (offline nutzbar, auf jedem Gerät gleich) */
+@font-face { font-family: "Inter"; src: url("fonts/Inter-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-SemiBold.woff") format("woff"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-Bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Lora"; src: url("fonts/Lora-SemiBold.woff") format("woff"); font-weight: 600; font-style: normal; font-display: swap; }
+
 :root {
   /* Standardwerte (Sage Mist, hell). Das Theme-System in JS überschreibt sie. */
   --bg: #F2F5F2;
@@ -61,7 +67,9 @@ body {
 svg.ic { width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.2em; }
 
 .header-container { display: flex; justify-content: space-between; align-items: center; margin: .5rem 0 1rem; }
-h1 { font-size: 1.25rem; margin: 0; letter-spacing: -0.01em; }
+h1 { font-family: Lora, Georgia, "Times New Roman", serif; font-size: 1.5rem; font-weight: 600; margin: 0; letter-spacing: 0; line-height: 1.1; }
+.brand { display: flex; flex-direction: column; gap: .15rem; }
+.tagline { font-size: .72rem; color: var(--subtext); letter-spacing: .04em; text-transform: uppercase; font-weight: 600; }
 h2 { font-size: 1rem; margin: 0 0 .6rem; }
 .header-controls { display: flex; gap: .4rem; }
 
@@ -140,8 +148,12 @@ html[data-btn="outline"] .badge { background: transparent; color: var(--sct); bo
 .summary-header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .summary-header input[type="date"] { width: auto; }
 .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .4rem; text-align: center; margin-top: .75rem; }
-.summary-box { padding: .45rem .2rem; border-radius: var(--r-sm); background: var(--bg); border: 1px solid var(--border); }
-.summary-box small { display: block; font-size: .65rem; color: var(--subtext); font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
+/* Label oben, Betrag unten: alle Boxen einer Reihe gleich hoch, Beträge auf einer Linie */
+.summary-box {
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: .35rem;
+  padding: .45rem .2rem; border-radius: var(--r-sm); background: var(--bg); border: 1px solid var(--border);
+}
+.summary-box small { display: block; font-size: .65rem; line-height: 1.25; color: var(--subtext); font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
 .summary-box span { font-size: .9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .hint { font-size: .72rem; color: var(--subtext); margin: .6rem 0 0; }
 
@@ -241,7 +253,10 @@ html[data-theme="dark"] .toast button { color: #B85B48; }
 <body>
 
 <div class="header-container">
-  <h1>Work &amp; Expense Tracker</h1>
+  <div class="brand">
+    <h1>Chronicler</h1>
+    <span class="tagline">Time &amp; expenses</span>
+  </div>
   <div class="header-controls">
     <button class="icon-btn" data-action="refresh" title="Refresh app" aria-label="Refresh app">
       <svg class="ic" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
@@ -401,7 +416,7 @@ html[data-theme="dark"] .toast button { color: #B85B48; }
 </div>
 <input type="file" id="import-file" accept=".json,application/json" style="display:none">
 
-<div class="credits">Developed by Luipolt</div>
+<div class="credits">Developed by Holger &amp; Gemini</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toast-text"></span><button id="toast-undo" type="button">Undo</button></div>
 
@@ -505,9 +520,13 @@ let look = loadLook();
 let lookTimer = null;
 function saveLook(now) {
   clearTimeout(lookTimer);
-  const write = () => { try { localStorage.setItem(KEY_LOOK, JSON.stringify(look)); } catch (e) {} };
+  const write = () => { lookTimer = null; try { localStorage.setItem(KEY_LOOK, JSON.stringify(look)); } catch (e) {} };
   if (now) write(); else lookTimer = setTimeout(write, 250);
 }
+// Beim Verlassen oder Verstecken der App ausstehende Änderungen sofort sichern
+function flushLook() { if (lookTimer) saveLook(true); }
+window.addEventListener('pagehide', flushLook);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushLook(); });
 
 function systemTheme() {
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -942,7 +961,7 @@ function exportJsonBackup() {
   const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
   const a = document.createElement('a');
   a.href = url;
-  a.download = `tracker_backup_${localDate()}.json`;
+  a.download = `chronicler_backup_${localDate()}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();

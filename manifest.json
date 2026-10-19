@@ -1,13 +1,24 @@
 {
-  "name": "Work & Expense Tracker",
-  "short_name": "Tracker",
+  "name": "Chronicler",
+  "short_name": "Chronicler",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#F8F6F0",
-  "theme_color": "#4A7C59",
+  "background_color": "#F2F5F2",
+  "theme_color": "#4C6A8A",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ]
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "description": "Time and expense tracking"
 }
