@@ -1,0 +1,12 @@
+Die Schriften in diesem Ordner sind unter der SIL Open Font License 1.1 lizenziert (https://openfontlicense.org).
+
+Inter
+  Copyright 2016 The Inter Project Authors
+  This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht
+  http://scripts.sil.org/OFL
+
+Lora
+  Copyright 2011 The Lora Project Authors (https://github.com/cyrealtype/Lora-Cyrillic), with Reserved Font Name "Lora".
+  This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: ht
+  https://scripts.sil.org/OFL
+
